@@ -20,7 +20,17 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.example.sophieclient",
+      "intentFilters": [{
+        "action": "VIEW",
+        "autoVerify": true,
+        "data": [{
+          "scheme": "https",
+          "host": "*.example.com"
+        }],
+        "category": ["BROWSABLE", "DEFAULT"]
+      }]
     },
     "web": {
       "favicon": "./assets/favicon.png"
