@@ -1,19 +1,23 @@
 {
   "expo": {
-    "name": "SophieClient",
-    "slug": "SophieClient",
+    "name": "SOPHIE",
+    "slug": "sophie-client",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sophieai.client"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,19 +25,49 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.example.sophieclient",
-      "intentFilters": [{
-        "action": "VIEW",
-        "autoVerify": true,
-        "data": [{
-          "scheme": "https",
-          "host": "*.example.com"
-        }],
-        "category": ["BROWSABLE", "DEFAULT"]
-      }]
+      "package": "com.sophieai.client",
+      "versionCode": 1,
+      "permissions": [],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "*.sophieai.dev",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "androidNavigationBar": {
+      "backgroundColor": "#ffffff",
+      "barStyle": "dark-content"
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#ffffff",
+      "barStyle": "dark-content",
+      "translucent": false
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "sophie-client"
+      }
     }
   }
 }
