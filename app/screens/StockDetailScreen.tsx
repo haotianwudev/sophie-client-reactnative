@@ -14,9 +14,18 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { useQuery } from '@apollo/client';
 import Header from '../components/layout/Header';
 import { StockDetailScreenRouteProp, StockDetailScreenNavigationProp } from '../types/navigation';
-import { GET_STOCK_DETAILS, GET_LATEST_SOPHIE_ANALYSIS, GET_LATEST_AGENT_SIGNAL } from '../lib/graphql/queries';
+import { 
+  GET_STOCK_DETAILS, 
+  GET_LATEST_SOPHIE_ANALYSIS, 
+  GET_LATEST_AGENT_SIGNAL,
+  GET_STOCK_TECHNICALS,
+  GET_STOCK_SENTIMENT,
+  GET_STOCK_FUNDAMENTALS,
+  GET_STOCK_VALUATIONS
+} from '../lib/graphql/queries';
 import StockAnalysisSummary from '../components/stock/StockAnalysisSummary';
 import InvestmentMasterAnalysis, { AgentSignal } from '../components/stock/InvestmentMasterAnalysis';
+import DetailedAnalysisTabs from '../components/stock/DetailedAnalysisTabs';
 
 // Define interface for stock data structure
 interface StockData {
@@ -117,6 +126,42 @@ const StockDetailScreen = () => {
       }
     });
   
+  // Fetch technical analysis data
+  const { loading: technicalsLoading, error: technicalsError, data: technicalsData } = 
+    useQuery(GET_STOCK_TECHNICALS, { 
+      variables: { ticker },
+      onError: (error) => {
+        console.error("Error fetching technicals analysis:", error);
+      }
+    });
+  
+  // Fetch sentiment analysis data
+  const { loading: sentimentLoading, error: sentimentError, data: sentimentData } = 
+    useQuery(GET_STOCK_SENTIMENT, { 
+      variables: { ticker },
+      onError: (error) => {
+        console.error("Error fetching sentiment analysis:", error);
+      }
+    });
+  
+  // Fetch fundamental analysis data
+  const { loading: fundamentalsLoading, error: fundamentalsError, data: fundamentalsData } = 
+    useQuery(GET_STOCK_FUNDAMENTALS, { 
+      variables: { ticker },
+      onError: (error) => {
+        console.error("Error fetching fundamentals analysis:", error);
+      }
+    });
+  
+  // Fetch valuation data
+  const { loading: valuationsLoading, error: valuationsError, data: valuationsData } = 
+    useQuery(GET_STOCK_VALUATIONS, { 
+      variables: { ticker },
+      onError: (error) => {
+        console.error("Error fetching valuations data:", error);
+      }
+    });
+  
   // Process stock data when it's available
   useEffect(() => {
     if (detailsData?.stock) {
@@ -197,8 +242,28 @@ const StockDetailScreen = () => {
     grahamLoading
   ) && Object.keys(masterData).length === 0;
   
+  const isDetailedAnalysisLoading = technicalsLoading || sentimentLoading || fundamentalsLoading || valuationsLoading;
+  
   // Prepare SOPHIE analysis data for the component
   const sophieAnalysis = sophieData?.latestSophieAnalysis;
+  
+  // Map API signals to more specific strength values for the radar chart
+  const mapToStrengthLevel = (signal: string): string => {
+    if (!signal) return 'neutral';
+    
+    // For now, just use the base signal levels
+    // This could be extended with more nuanced mapping based on confidence values
+    switch(signal.toLowerCase()) {
+      case 'bullish': 
+        return 'bullish'; // Or 'strong_bullish' based on confidence
+      case 'bearish': 
+        return 'bearish'; // Or 'strong_bearish' based on confidence
+      case 'neutral': 
+        return 'neutral';
+      default: 
+        return 'neutral';
+    }
+  };
   
   // Default SOPHIE data when no data is available
   const defaultSophieData = {
@@ -329,11 +394,22 @@ const StockDetailScreen = () => {
         {/* Analysis Content */}
         <View style={styles.sectionContainer}>
           {activeTab === AnalysisTab.SOPHIE ? (
-            // SOPHIE Analysis
-            <StockAnalysisSummary 
-              sophieData={sophieAnalysis || defaultSophieData}
-              loading={sophieLoading && !sophieAnalysis}
-            />
+            <>
+              {/* SOPHIE Analysis */}
+              <StockAnalysisSummary 
+                sophieData={sophieAnalysis || defaultSophieData}
+                loading={sophieLoading && !sophieAnalysis}
+              />
+              
+              {/* Detailed Analysis Tabs */}
+              <DetailedAnalysisTabs
+                technicalData={technicalsData?.latestTechnicals}
+                sentimentData={sentimentData?.latestSentiment}
+                fundamentalData={fundamentalsData?.latestFundamentals}
+                valuationData={valuationsData?.latestValuations}
+                loading={isDetailedAnalysisLoading}
+              />
+            </>
           ) : (
             // Investment Masters Analysis
             <InvestmentMasterAnalysis 
