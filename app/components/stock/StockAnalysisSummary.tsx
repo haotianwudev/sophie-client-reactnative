@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { base64ToImageSource } from '../../utils/imageHelpers';
 import ColorText from '../ui/ColorText';
+import { Ionicons } from '@expo/vector-icons';
 
 // Base64 encoded SOPHIE placeholder (purple gradient with "S" initial) for fallback
 const SOPHIE_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDEzNSkiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2NzNhYjciIC8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjOWMyN2IwIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iYm9sZCI+UzwvdGV4dD48L3N2Zz4=';
@@ -85,6 +86,14 @@ export const StockAnalysisSummary = ({ sophieData, loading = false }: SophieAnal
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const commentStyle = getCommentBubbleStyle(sophieData.signal, isDark);
+  
+  // State for expanded sections
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
+  
+  // Toggle section visibility
+  const toggleDetails = () => {
+    setIsDetailsExpanded(prev => !prev);
+  };
 
   if (loading) {
     return (
@@ -142,65 +151,95 @@ export const StockAnalysisSummary = ({ sophieData, loading = false }: SophieAnal
         </Text>
       </View>
 
-      {/* Outlook sections */}
-      <View style={styles.outlookContainer}>
-        {/* Short term outlook */}
-        <View style={[styles.outlookCard, isDark && styles.darkCard]}>
-          <Text style={[styles.outlookTitle, isDark && styles.darkText]}>Short Term</Text>
-          <Text style={[styles.outlookContent, isDark && styles.darkMutedText]}>
-            {sophieData.short_term_outlook}
+      {/* Details section header */}
+      <TouchableOpacity 
+        style={[styles.sectionHeader, isDark && styles.darkCard]}
+        onPress={toggleDetails}
+      >
+        
+        <View style={styles.headerRight}>
+          <Text style={[styles.tapText, isDark && styles.darkTapText]}>
+            Tap to {isDetailsExpanded ? 'hide' : 'view'} details
           </Text>
+          <Ionicons 
+            name={isDetailsExpanded ? "chevron-up" : "chevron-down"} 
+            size={16} 
+            color={isDark ? "#9ca3af" : "#6b7280"} 
+          />
         </View>
+      </TouchableOpacity>
 
-        {/* Medium term outlook */}
-        <View style={[styles.outlookCard, isDark && styles.darkCard]}>
-          <Text style={[styles.outlookTitle, isDark && styles.darkText]}>Medium Term</Text>
-          <Text style={[styles.outlookContent, isDark && styles.darkMutedText]}>
-            {sophieData.medium_term_outlook}
-          </Text>
+      {/* Expandable content */}
+      {isDetailsExpanded && (
+        <View style={[styles.sectionContent, isDark && styles.darkCard]}>
+          {/* Outlook section */}
+          <View style={styles.subsection}>
+            <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>Outlook Analysis</Text>
+            
+            {/* Short term outlook */}
+            <View style={styles.outlookItem}>
+              <Text style={[styles.outlookTitle, isDark && styles.darkText]}>Short Term</Text>
+              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
+                {sophieData.short_term_outlook}
+              </Text>
+            </View>
+            
+            {/* Medium term outlook */}
+            <View style={styles.outlookItem}>
+              <Text style={[styles.outlookTitle, isDark && styles.darkText]}>Medium Term</Text>
+              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
+                {sophieData.medium_term_outlook}
+              </Text>
+            </View>
+            
+            {/* Long term outlook */}
+            <View style={styles.outlookItem}>
+              <Text style={[styles.outlookTitle, isDark && styles.darkText]}>Long Term</Text>
+              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
+                {sophieData.long_term_outlook}
+              </Text>
+            </View>
+          </View>
+          
+          {/* Divider */}
+          <View style={[styles.divider, isDark && styles.darkDivider]} />
+          
+          {/* Factors section */}
+          <View style={styles.subsection}>
+            <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>Factors & Risks</Text>
+            
+            {/* Bullish factors */}
+            <View style={styles.factorGroup}>
+              <Text style={[styles.factorTitle, styles.bullishTitle]}>Bullish Factors</Text>
+              {sophieData.bullish_factors.map((factor, index) => (
+                <Text key={index} style={[styles.factorItem, isDark && styles.darkFactorItem]}>
+                  • {factor}
+                </Text>
+              ))}
+            </View>
+            
+            {/* Bearish factors */}
+            <View style={styles.factorGroup}>
+              <Text style={[styles.factorTitle, styles.bearishTitle]}>Bearish Factors</Text>
+              {sophieData.bearish_factors.map((factor, index) => (
+                <Text key={index} style={[styles.factorItem, isDark && styles.darkFactorItem]}>
+                  • {factor}
+                </Text>
+              ))}
+            </View>
+            
+            {/* Risks */}
+            <View style={styles.factorGroup}>
+              <Text style={[styles.factorTitle, styles.risksTitle]}>Risks</Text>
+              {sophieData.risks.map((risk, index) => (
+                <Text key={index} style={[styles.factorItem, isDark && styles.darkFactorItem]}>
+                  • {risk}
+                </Text>
+              ))}
+            </View>
+          </View>
         </View>
-
-        {/* Long term outlook */}
-        <View style={[styles.outlookCard, isDark && styles.darkCard]}>
-          <Text style={[styles.outlookTitle, isDark && styles.darkText]}>Long Term</Text>
-          <Text style={[styles.outlookContent, isDark && styles.darkMutedText]}>
-            {sophieData.long_term_outlook}
-          </Text>
-        </View>
-      </View>
-
-      {/* Factors section */}
-      <View style={styles.factorsContainer}>
-        {/* Bullish factors */}
-        <View style={[styles.factorCard, isDark && styles.darkCard]}>
-          <Text style={[styles.factorTitle, styles.bullishTitle]}>Bullish Factors</Text>
-          {sophieData.bullish_factors.map((factor, index) => (
-            <Text key={index} style={[styles.factorItem, isDark && styles.darkFactorItem]}>
-              • {factor}
-            </Text>
-          ))}
-        </View>
-
-        {/* Bearish factors */}
-        <View style={[styles.factorCard, isDark && styles.darkCard]}>
-          <Text style={[styles.factorTitle, styles.bearishTitle]}>Bearish Factors</Text>
-          {sophieData.bearish_factors.map((factor, index) => (
-            <Text key={index} style={[styles.factorItem, isDark && styles.darkFactorItem]}>
-              • {factor}
-            </Text>
-          ))}
-        </View>
-
-        {/* Risks */}
-        <View style={[styles.factorCard, isDark && styles.darkCard]}>
-          <Text style={[styles.factorTitle, styles.risksTitle]}>Risks</Text>
-          {sophieData.risks.map((risk, index) => (
-            <Text key={index} style={[styles.factorItem, isDark && styles.darkFactorItem]}>
-              • {risk}
-            </Text>
-          ))}
-        </View>
-      </View>
+      )}
     </View>
   );
 };
@@ -278,40 +317,75 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  outlookContainer: {
-    marginBottom: 16,
-  },
-  outlookCard: {
+  sectionHeader: {
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
-    padding: 12,
+    padding: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  sectionContent: {
+    backgroundColor: '#f8f9fa',
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    padding: 16,
     marginBottom: 8,
   },
-  darkCard: {
-    backgroundColor: '#333333',
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  subsection: {
+    marginBottom: 16,
+  },
+  subsectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tapText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginRight: 4,
+  },
+  darkTapText: {
+    color: '#9ca3af',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginVertical: 16,
+  },
+  darkDivider: {
+    backgroundColor: '#4b5563',
+  },
+  outlookItem: {
+    marginBottom: 14,
   },
   outlookTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#111827',
     marginBottom: 4,
   },
-  outlookContent: {
+  contentText: {
     fontSize: 14,
     color: '#4b5563',
     lineHeight: 20,
   },
-  factorsContainer: {
-    marginBottom: 16,
-  },
-  factorCard: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
+  factorGroup: {
+    marginBottom: 14,
   },
   factorTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
     marginBottom: 8,
   },
@@ -347,6 +421,9 @@ const styles = StyleSheet.create({
   },
   darkMutedText: {
     color: '#9ca3af', // gray-400
+  },
+  darkCard: {
+    backgroundColor: '#333333',
   },
 });
 

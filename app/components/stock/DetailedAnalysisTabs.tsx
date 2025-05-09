@@ -130,9 +130,7 @@ const DetailedAnalysisTabs = ({
         />
       </View>
       
-      {/* Tabs */}
-      <Text style={[styles.subSectionTitle, isDark && styles.darkText]}>Analysis Details</Text>
-      
+      {/* Tabs */}      
       <View style={styles.tabButtonsContainer}>
         <TouchableOpacity 
           style={[
