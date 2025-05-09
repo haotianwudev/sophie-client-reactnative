@@ -127,4 +127,18 @@ export const GET_LATEST_SOPHIE_ANALYSIS = gql`
       updated_at
     }
   }
+`;
+
+// Query to get investment master (agent) analysis
+export const GET_LATEST_AGENT_SIGNAL = gql`
+  query GetLatestAgentSignal($ticker: String!, $agent: String!) {
+    latestAgentSignal(ticker: $ticker, agent: $agent) {
+      ticker
+      agent
+      signal
+      confidence
+      reasoning
+      biz_date
+    }
+  }
 `; 

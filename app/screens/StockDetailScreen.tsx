@@ -14,8 +14,9 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { useQuery } from '@apollo/client';
 import Header from '../components/layout/Header';
 import { StockDetailScreenRouteProp, StockDetailScreenNavigationProp } from '../types/navigation';
-import { GET_STOCK_DETAILS, GET_LATEST_SOPHIE_ANALYSIS } from '../lib/graphql/queries';
+import { GET_STOCK_DETAILS, GET_LATEST_SOPHIE_ANALYSIS, GET_LATEST_AGENT_SIGNAL } from '../lib/graphql/queries';
 import StockAnalysisSummary from '../components/stock/StockAnalysisSummary';
+import InvestmentMasterAnalysis, { AgentSignal } from '../components/stock/InvestmentMasterAnalysis';
 
 // Define interface for stock data structure
 interface StockData {
@@ -26,12 +27,21 @@ interface StockData {
   changePercent: string | number;
 }
 
+// Define tabs for analysis view
+enum AnalysisTab {
+  SOPHIE = 'SOPHIE',
+  MASTERS = 'MASTERS'
+}
+
 const StockDetailScreen = () => {
   const route = useRoute<StockDetailScreenRouteProp>();
   const navigation = useNavigation<StockDetailScreenNavigationProp>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [stockData, setStockData] = useState<StockData | null>(null);
+  const [activeTab, setActiveTab] = useState<AnalysisTab>(AnalysisTab.SOPHIE);
+  const [currentMaster, setCurrentMaster] = useState<string>('warren_buffett');
+  const [masterData, setMasterData] = useState<Record<string, AgentSignal>>({});
   
   // Get ticker from route params
   const { ticker } = route.params;
@@ -54,7 +64,7 @@ const StockDetailScreen = () => {
     });
   
   // Fetch SOPHIE analysis
-  const { loading: analysisLoading, error: analysisError, data: analysisData } = 
+  const { loading: sophieLoading, error: sophieError, data: sophieData } = 
     useQuery(GET_LATEST_SOPHIE_ANALYSIS, { 
       variables: { ticker },
       onError: (error) => {
@@ -62,7 +72,52 @@ const StockDetailScreen = () => {
       }
     });
   
-  // Process data when it's available
+  // Fetch Warren Buffett analysis
+  const { loading: buffettLoading, error: buffettError, data: buffettData } = 
+    useQuery(GET_LATEST_AGENT_SIGNAL, { 
+      variables: { ticker, agent: "warren_buffett" },
+      onError: (error) => {
+        console.error("Error fetching Warren Buffett analysis:", error);
+      }
+    });
+  
+  // Fetch Charlie Munger analysis
+  const { loading: mungerLoading, error: mungerError, data: mungerData } = 
+    useQuery(GET_LATEST_AGENT_SIGNAL, { 
+      variables: { ticker, agent: "charlie_munger" },
+      onError: (error) => {
+        console.error("Error fetching Charlie Munger analysis:", error);
+      }
+    });
+  
+  // Fetch Cathie Wood analysis
+  const { loading: woodLoading, error: woodError, data: woodData } = 
+    useQuery(GET_LATEST_AGENT_SIGNAL, { 
+      variables: { ticker, agent: "cathie_wood" },
+      onError: (error) => {
+        console.error("Error fetching Cathie Wood analysis:", error);
+      }
+    });
+  
+  // Fetch Stanley Druckenmiller analysis
+  const { loading: druckenmillerLoading, error: druckenmillerError, data: druckenmillerData } = 
+    useQuery(GET_LATEST_AGENT_SIGNAL, { 
+      variables: { ticker, agent: "stanley_druckenmiller" },
+      onError: (error) => {
+        console.error("Error fetching Stanley Druckenmiller analysis:", error);
+      }
+    });
+  
+  // Fetch Ben Graham analysis
+  const { loading: grahamLoading, error: grahamError, data: grahamData } = 
+    useQuery(GET_LATEST_AGENT_SIGNAL, { 
+      variables: { ticker, agent: "ben_graham" },
+      onError: (error) => {
+        console.error("Error fetching Ben Graham analysis:", error);
+      }
+    });
+  
+  // Process stock data when it's available
   useEffect(() => {
     if (detailsData?.stock) {
       const stockInfo = detailsData.stock;
@@ -99,10 +154,51 @@ const StockDetailScreen = () => {
     }
   }, [detailsData, ticker]);
   
-  const isLoading = (detailsLoading || analysisLoading) && !stockData;
+  // Process master data when available
+  useEffect(() => {
+    const newMasterData: Record<string, AgentSignal> = { ...masterData };
+    
+    if (buffettData?.latestAgentSignal) {
+      newMasterData['warren_buffett'] = buffettData.latestAgentSignal;
+    }
+    
+    if (mungerData?.latestAgentSignal) {
+      newMasterData['charlie_munger'] = mungerData.latestAgentSignal;
+    }
+    
+    if (woodData?.latestAgentSignal) {
+      newMasterData['cathie_wood'] = woodData.latestAgentSignal;
+    }
+    
+    if (druckenmillerData?.latestAgentSignal) {
+      newMasterData['stanley_druckenmiller'] = druckenmillerData.latestAgentSignal;
+    }
+    
+    if (grahamData?.latestAgentSignal) {
+      newMasterData['ben_graham'] = grahamData.latestAgentSignal;
+    }
+    
+    if (Object.keys(newMasterData).length > 0) {
+      setMasterData(newMasterData);
+      
+      // Initialize currentMaster if not already set
+      if (!masterData[currentMaster] && newMasterData[Object.keys(newMasterData)[0]]) {
+        setCurrentMaster(Object.keys(newMasterData)[0]);
+      }
+    }
+  }, [buffettData, mungerData, woodData, druckenmillerData, grahamData]);
+  
+  const isLoading = (detailsLoading || sophieLoading) && !stockData;
+  const isMasterLoading = (
+    buffettLoading || 
+    mungerLoading || 
+    woodLoading || 
+    druckenmillerLoading || 
+    grahamLoading
+  ) && Object.keys(masterData).length === 0;
   
   // Prepare SOPHIE analysis data for the component
-  const sophieAnalysis = analysisData?.latestSophieAnalysis;
+  const sophieAnalysis = sophieData?.latestSophieAnalysis;
   
   // Default SOPHIE data when no data is available
   const defaultSophieData = {
@@ -118,6 +214,14 @@ const StockDetailScreen = () => {
     risks: ["Market volatility", "Sector rotation", "Macroeconomic headwinds"],
     model_name: "sophie",
     model_display_name: "SOPHIE"
+  };
+  
+  const handleTabChange = (tab: AnalysisTab) => {
+    setActiveTab(tab);
+  };
+  
+  const handleMasterChange = (master: string) => {
+    setCurrentMaster(master);
   };
   
   if (isLoading) {
@@ -173,18 +277,71 @@ const StockDetailScreen = () => {
         {/* Disclaimer */}
         <View style={[styles.disclaimerContainer, isDark && styles.darkDisclaimerContainer]}>
           <Text style={[styles.disclaimerText, isDark && styles.darkMutedText]}>
-            <Text style={styles.disclaimerBold}>Disclaimer:</Text> SOPHIE analysis is for educational purposes only,
+            <Text style={styles.disclaimerBold}>Disclaimer:</Text> Analysis is for educational purposes only,
             intended for people to learn more about finance, but not giving financial advice.
             All suggestions are generated by AI models.
           </Text>
         </View>
         
-        {/* SOPHIE Analysis Section */}
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === AnalysisTab.SOPHIE && styles.activeTab,
+              isDark && styles.darkTab,
+              activeTab === AnalysisTab.SOPHIE && isDark && styles.darkActiveTab
+            ]}
+            onPress={() => handleTabChange(AnalysisTab.SOPHIE)}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === AnalysisTab.SOPHIE && styles.activeTabText,
+                isDark && styles.darkTabText
+              ]}
+            >
+              SOPHIE
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === AnalysisTab.MASTERS && styles.activeTab,
+              isDark && styles.darkTab,
+              activeTab === AnalysisTab.MASTERS && isDark && styles.darkActiveTab
+            ]}
+            onPress={() => handleTabChange(AnalysisTab.MASTERS)}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === AnalysisTab.MASTERS && styles.activeTabText,
+                isDark && styles.darkTabText
+              ]}
+            >
+              Investment Masters
+            </Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Analysis Content */}
         <View style={styles.sectionContainer}>
-          <StockAnalysisSummary 
-            sophieData={sophieAnalysis || defaultSophieData}
-            loading={analysisLoading && !sophieAnalysis}
-          />
+          {activeTab === AnalysisTab.SOPHIE ? (
+            // SOPHIE Analysis
+            <StockAnalysisSummary 
+              sophieData={sophieAnalysis || defaultSophieData}
+              loading={sophieLoading && !sophieAnalysis}
+            />
+          ) : (
+            // Investment Masters Analysis
+            <InvestmentMasterAnalysis 
+              currentAgent={currentMaster ? masterData[currentMaster] : null}
+              loading={isMasterLoading}
+              onSelectAgent={handleMasterChange}
+            />
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -272,6 +429,43 @@ const styles = StyleSheet.create({
   },
   disclaimerBold: {
     fontWeight: 'bold',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+  },
+  activeTab: {
+    backgroundColor: '#4f46e5',
+  },
+  darkTab: {
+    backgroundColor: '#374151',
+    borderColor: '#4b5563',
+  },
+  darkActiveTab: {
+    backgroundColor: '#4f46e5',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6b7280',
+  },
+  activeTabText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+  },
+  darkTabText: {
+    color: '#d1d5db',
   },
   sectionContainer: {
     padding: 16,
