@@ -7,7 +7,6 @@ import {
   useColorScheme,
   ScrollView
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 import AnalysisRadarChart from './AnalysisRadarChart';
 
 // Define the tab enum
@@ -146,7 +145,6 @@ const DetailedAnalysisTabs = ({
           onPress={() => setActiveTab(AnalysisDetailTab.TECHNICAL)}
         >
           <View style={styles.tabButtonContent}>
-            <MaterialIcons name="bar-chart" size={20} color={activeTab === AnalysisDetailTab.TECHNICAL ? (isDark ? '#FFFFFF' : '#000000') : '#6b7280'} />
             <Text 
               style={[
                 styles.tabButtonText, 
@@ -176,7 +174,6 @@ const DetailedAnalysisTabs = ({
           onPress={() => setActiveTab(AnalysisDetailTab.SENTIMENT)}
         >
           <View style={styles.tabButtonContent}>
-            <MaterialIcons name="favorite" size={20} color={activeTab === AnalysisDetailTab.SENTIMENT ? (isDark ? '#FFFFFF' : '#000000') : '#6b7280'} />
             <Text 
               style={[
                 styles.tabButtonText, 
@@ -206,7 +203,6 @@ const DetailedAnalysisTabs = ({
           onPress={() => setActiveTab(AnalysisDetailTab.FUNDAMENTAL)}
         >
           <View style={styles.tabButtonContent}>
-            <MaterialIcons name="book" size={20} color={activeTab === AnalysisDetailTab.FUNDAMENTAL ? (isDark ? '#FFFFFF' : '#000000') : '#6b7280'} />
             <Text 
               style={[
                 styles.tabButtonText, 
@@ -236,7 +232,6 @@ const DetailedAnalysisTabs = ({
           onPress={() => setActiveTab(AnalysisDetailTab.VALUATION)}
         >
           <View style={styles.tabButtonContent}>
-            <MaterialIcons name="calculate" size={20} color={activeTab === AnalysisDetailTab.VALUATION ? (isDark ? '#FFFFFF' : '#000000') : '#6b7280'} />
             <Text 
               style={[
                 styles.tabButtonText, 
@@ -543,7 +538,6 @@ const styles = StyleSheet.create({
   },
   tabButtonText: {
     fontSize: 14,
-    marginLeft: 6,
     color: '#6b7280',
     fontWeight: '500',
   },

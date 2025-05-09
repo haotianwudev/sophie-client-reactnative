@@ -67,6 +67,16 @@ export const GET_TRENDING_STOCKS = gql`
   }
 `;
 
+// Query to get top tickers with SOPHIE scores
+export const GET_TOP_TICKERS = gql`
+  query GetTopTickers {
+    coveredTickers(top: 10) {
+      ticker
+      score
+    }
+  }
+`;
+
 // Query to batch fetch stock data for multiple tickers
 export const BATCH_STOCKS_QUERY = gql`
   query GetBatchStocksWithDates($tickers: [String!]!, $startDate: String!, $endDate: String!) {

@@ -175,7 +175,6 @@ const InvestmentMasterAnalysis = ({
               <Image
                 source={getAgentImageSource(agent)}
                 style={styles.agentButtonImage}
-                defaultSource={base64ToImageSource(PLACEHOLDER_IMAGES[agent])}
               />
               <Text
                 style={[
@@ -197,7 +196,10 @@ const InvestmentMasterAnalysis = ({
         <View style={styles.agentProfileContainer}>
           <Image
             source={getAgentImageSource(currentAgent.agent)}
-            style={styles.agentImage}
+            style={[
+              styles.agentImage,
+              { borderColor: getSignalColor(currentAgent.signal) }
+            ]}
             defaultSource={base64ToImageSource(PLACEHOLDER_IMAGES[currentAgent.agent])}
           />
           <View style={styles.agentInfo}>

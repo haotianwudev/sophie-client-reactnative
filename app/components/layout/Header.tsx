@@ -14,14 +14,14 @@ const Header = () => {
         style={styles.logoContainer}
         onPress={() => navigation.navigate('Home')}
       >
-        <View style={styles.logoCircle}>
-          {/* Replace with actual logo image when available */}
-          <Text style={styles.logoPlaceholder}>S</Text>
-        </View>
+        <Image 
+          source={require('../../assets/images/agents/SOPHIE.png')}
+          style={styles.logoImage}
+        />
         <View>
           <Text style={[styles.logoText, isDark && styles.darkText]}>SOPHIE</Text>
           <Text style={[styles.logoSubtext, isDark && styles.darkMutedText]}>
-            Stock/Option Portfolio Helper
+            Your AI Stock Analyst
           </Text>
         </View>
       </TouchableOpacity>
@@ -48,19 +48,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoCircle: {
+  logoImage: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#6366F1',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: 8,
-  },
-  logoPlaceholder: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
   logoText: {
     fontWeight: 'bold',

@@ -36,7 +36,7 @@ const StockCard = ({ ticker, name, price, change, sophieScore, isDark = false }:
             isPositive ? styles.positiveChange : styles.negativeChange
           ]}
         >
-          {isPositive ? '+' : ''}{change.toFixed(2)} ({Math.abs((change / price) * 100).toFixed(2)}%)
+          {isPositive ? '+' : ''}{change.toFixed(2)}%
         </Text>
       </View>
       
@@ -45,7 +45,7 @@ const StockCard = ({ ticker, name, price, change, sophieScore, isDark = false }:
           styles.scoreIndicator, 
           { backgroundColor: getScoreColor(sophieScore) }
         ]}>
-          <Text style={styles.scoreText}>{sophieScore}</Text>
+          <Text style={styles.scoreText}>{Math.round(sophieScore)}</Text>
         </View>
       )}
     </View>
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#222222',
   },
   stockInfo: {
-    flex: 1,
+    flex: 2,
     marginRight: 8,
   },
   ticker: {
@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   priceInfo: {
+    flex: 1,
     alignItems: 'flex-end',
     marginRight: 12,
   },
