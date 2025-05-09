@@ -18,6 +18,7 @@ import StockCard from '../components/stock/StockCard';
 import Disclaimer from '../components/ui/Disclaimer';
 import { AllStockReviewsScreenNavigationProp } from '../types/navigation';
 import { GET_ALL_COVERED_STOCKS, BATCH_STOCKS_QUERY } from '../lib/graphql/queries';
+import { getBookmarkedTickers, toggleBookmark } from '../utils/bookmarkHelper';
 
 // Define interface for stock data
 interface StockData {
@@ -26,6 +27,7 @@ interface StockData {
   price: number;
   change: number;
   sophieScore?: number;
+  isBookmarked?: boolean;
 }
 
 // Define interface for batch stock response from API
@@ -56,6 +58,17 @@ const AllStockReviewsScreen = () => {
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [allTickers, setAllTickers] = useState<string[]>([]);
   const [tickerScores, setTickerScores] = useState<Map<string, number>>(new Map());
+  const [bookmarkedTickers, setBookmarkedTickers] = useState<string[]>([]);
+  
+  // Load bookmarked tickers on initial load
+  useEffect(() => {
+    const loadBookmarks = async () => {
+      const bookmarks = await getBookmarkedTickers();
+      setBookmarkedTickers(bookmarks);
+    };
+    
+    loadBookmarks();
+  }, []);
   
   // Get current date for GraphQL query
   const today = new Date();
@@ -186,13 +199,17 @@ const AllStockReviewsScreen = () => {
       // Get the score directly from the tickerScores map
       const sophieScore = tickerScores.get(ticker);
       
+      // Check if the stock is bookmarked
+      const isBookmarked = bookmarkedTickers.includes(ticker);
+      
       // Create the validated stock data entry
       validStocks.push({
         ticker,
         name: companyNames[ticker] || stockData.company?.name || ticker,
         price: latestPrice.close,
         change: changePercent,
-        sophieScore
+        sophieScore,
+        isBookmarked
       });
     });
     
@@ -205,6 +222,24 @@ const AllStockReviewsScreen = () => {
       
       setStocks(sortedStocks);
     }
+  };
+  
+  // Handle bookmark toggle
+  const handleToggleBookmark = async (ticker: string) => {
+    await toggleBookmark(ticker);
+    
+    // Update local bookmarked tickers list
+    const updatedBookmarks = await getBookmarkedTickers();
+    setBookmarkedTickers(updatedBookmarks);
+    
+    // Update isBookmarked flag in stocks list
+    setStocks(prevStocks => 
+      prevStocks.map(stock => 
+        stock.ticker === ticker 
+          ? {...stock, isBookmarked: updatedBookmarks.includes(ticker)} 
+          : stock
+      )
+    );
   };
 
   return (
@@ -253,6 +288,8 @@ const AllStockReviewsScreen = () => {
                   change={stock.change}
                   sophieScore={stock.sophieScore}
                   isDark={isDark}
+                  isBookmarked={stock.isBookmarked}
+                  onToggleBookmark={handleToggleBookmark}
                 />
               </TouchableOpacity>
             ))

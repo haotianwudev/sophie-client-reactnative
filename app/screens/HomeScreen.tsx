@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useQuery } from '@apollo/client';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/layout/Header';
@@ -125,7 +125,34 @@ const HomeScreen = () => {
   const endDate = today.toISOString().split('T')[0];
   const startDate = threeMonthsAgo.toISOString().split('T')[0];
   
-  // Load bookmarked tickers on initial load
+  // Refresh bookmarks and bookmarked stocks when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const refreshBookmarks = async () => {
+        const bookmarks = await getBookmarkedTickers();
+        setBookmarkedTickers(bookmarks);
+        
+        // If we're in bookmarked view and have bookmarks, refetch the bookmarked stocks
+        if (showBookmarked && bookmarks.length > 0) {
+          refetchBookmarked();
+        } else if (showBookmarked && bookmarks.length === 0) {
+          setBookmarkedStocks([]);
+        }
+        
+        // Also update the bookmarked status in the trending stocks list
+        setStocks(prevStocks => 
+          prevStocks.map(stock => ({
+            ...stock,
+            isBookmarked: bookmarks.includes(stock.ticker)
+          }))
+        );
+      };
+      
+      refreshBookmarks();
+    }, [showBookmarked])
+  );
+  
+  // Initial load of bookmarked tickers
   useEffect(() => {
     const loadBookmarks = async () => {
       const bookmarks = await getBookmarkedTickers();
@@ -752,9 +779,9 @@ const HomeScreen = () => {
                 {showBookmarked && (
                   <TouchableOpacity 
                     style={styles.retryButton}
-                    onPress={() => setActiveTab(TabOption.TRENDING)}
+                    onPress={() => navigation.navigate('AllStockReviews')}
                   >
-                    <Text style={styles.retryButtonText}>View Trending Stocks</Text>
+                    <Text style={styles.retryButtonText}>View All Stock Reviews</Text>
                   </TouchableOpacity>
                 )}
                 {!showBookmarked && (
