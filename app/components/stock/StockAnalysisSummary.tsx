@@ -8,6 +8,7 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { base64ToImageSource } from '../../utils/imageHelpers';
+import ColorText from '../ui/ColorText';
 
 // Base64 encoded SOPHIE placeholder (purple gradient with "S" initial) for fallback
 const SOPHIE_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFRyYW5zZm9ybT0icm90YXRlKDEzNSkiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2NzNhYjciIC8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjOWMyN2IwIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjEwMCIgcj0iMTAwIiBmaWxsPSJ1cmwoI2dyYWQpIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iYm9sZCI+UzwvdGV4dD48L3N2Zz4=';
@@ -106,7 +107,7 @@ export const StockAnalysisSummary = ({ sophieData, loading = false }: SophieAnal
             defaultSource={base64ToImageSource(SOPHIE_PLACEHOLDER)}
           />
           <View>
-            <Text style={[styles.sophieTitle, isDark && styles.darkText]}>SOPHIE</Text>
+            <ColorText style={styles.sophieTitle} isDark={isDark}>SOPHIE</ColorText>
             <Text style={[styles.confidenceText, isDark && styles.darkMutedText]}>
               Confidence: {sophieData.confidence}%
             </Text>
@@ -239,8 +240,6 @@ const styles = StyleSheet.create({
   },
   sophieTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#7e22ce', // purple-600
   },
   confidenceText: {
     fontSize: 12,

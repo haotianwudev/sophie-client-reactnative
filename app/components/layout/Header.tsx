@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { HomeScreenNavigationProp } from '../../types/navigation';
+import ColorText from '../ui/ColorText';
 
 const Header = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -19,7 +20,7 @@ const Header = () => {
           style={styles.logoImage}
         />
         <View>
-          <Text style={[styles.logoText, isDark && styles.darkText]}>SOPHIE</Text>
+          <ColorText style={styles.logoText} isDark={isDark}>SOPHIE</ColorText>
           <Text style={[styles.logoSubtext, isDark && styles.darkMutedText]}>
             Your AI Stock Analyst
           </Text>
@@ -55,9 +56,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   logoText: {
-    fontWeight: 'bold',
     fontSize: 16,
-    color: '#000000',
   },
   logoSubtext: {
     fontSize: 12,

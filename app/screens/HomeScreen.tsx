@@ -10,7 +10,9 @@ import {
   ActivityIndicator,
   Button,
   Platform,
-  Animated
+  Animated,
+  Dimensions,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -26,6 +28,7 @@ import { HomeScreenNavigationProp } from '../types/navigation';
 import { BATCH_STOCKS_QUERY, GET_TOP_TICKERS } from '../lib/graphql/queries';
 import { getGraphQLUri } from '../lib/graphql/gql-config';
 import { testGraphQLConnection } from '../lib/graphql/test-connection';
+import ColorText from '../components/ui/ColorText';
 
 // Define interface for stock data
 interface StockData {
@@ -395,9 +398,9 @@ const HomeScreen = () => {
                       borderColor: isDark ? "#0EA5E9" : "#38BDF8"
                     }}
                   />
-                  <Text style={[styles.heroTitle, isDark && styles.darkText]}>
+                  <ColorText style={styles.heroTitle} isDark={isDark}>
                     SOPHIE
-                  </Text>
+                  </ColorText>
                 </View>
                 <Text style={[styles.heroSubtitle, isDark && styles.darkText]}>
                   Stock/Option Portfolio Helper for Investment and Education
@@ -467,9 +470,9 @@ const HomeScreen = () => {
                   borderColor: isDark ? "#0EA5E9" : "#38BDF8"
                 }}
               />
-              <Text style={[styles.collapsedCardTitle, isDark && styles.darkText]}>
+              <ColorText style={styles.collapsedCardTitle} isDark={isDark}>
                 SOPHIE
-              </Text>
+              </ColorText>
             </View>
             <Animated.View 
               style={{
@@ -618,8 +621,6 @@ const styles = StyleSheet.create({
   },
   collapsedCardTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
   },
   collapsedCardSubtitle: {
     fontSize: 12,
@@ -638,8 +639,6 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000000',
   },
   heroSubtitle: {
     fontSize: 18,
