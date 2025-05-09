@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, useColorScheme } from 
 import { useNavigation } from '@react-navigation/native';
 import { HomeScreenNavigationProp } from '../../types/navigation';
 import ColorText from '../ui/ColorText';
+import { Ionicons } from '@expo/vector-icons';
 
 const Header = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -14,15 +15,20 @@ const Header = () => {
       <TouchableOpacity 
         style={styles.logoContainer}
         onPress={() => navigation.navigate('Home')}
+        accessibilityLabel="Return to homepage"
+        accessibilityHint="Double tap to go back to the homepage"
       >
         <Image 
           source={require('../../assets/images/agents/SOPHIE.png')}
           style={styles.logoImage}
         />
         <View>
-          <ColorText style={styles.logoText} isDark={isDark}>SOPHIE</ColorText>
+          <View style={styles.titleContainer}>
+            <ColorText style={styles.logoText} isDark={isDark} useGradient={true}>SOPHIE</ColorText>
+            <Ionicons name="home-outline" size={14} color={isDark ? "#A78BFA" : "#8B5CF6"} style={styles.homeIcon} />
+          </View>
           <Text style={[styles.logoSubtext, isDark && styles.darkMutedText]}>
-            Your AI Stock Analyst
+            Your AI Stock Analyst • Tap to return home
           </Text>
         </View>
       </TouchableOpacity>
@@ -55,8 +61,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginRight: 8,
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   logoText: {
     fontSize: 16,
+  },
+  homeIcon: {
+    marginLeft: 4,
   },
   logoSubtext: {
     fontSize: 12,

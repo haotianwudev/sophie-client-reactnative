@@ -27,6 +27,9 @@ import StockAnalysisSummary from '../components/stock/StockAnalysisSummary';
 import InvestmentMasterAnalysis, { AgentSignal } from '../components/stock/InvestmentMasterAnalysis';
 import DetailedAnalysisTabs from '../components/stock/DetailedAnalysisTabs';
 import Disclaimer from '../components/ui/Disclaimer';
+import { Ionicons } from '@expo/vector-icons';
+import { getBookmarkedTickers, toggleBookmark } from '../utils/bookmarkHelper';
+import { calculate3MonthChange, sortPricesByDate } from '../utils/stockCalculations';
 
 // Define interface for stock data structure
 interface StockData {
@@ -52,9 +55,27 @@ const StockDetailScreen = () => {
   const [activeTab, setActiveTab] = useState<AnalysisTab>(AnalysisTab.SOPHIE);
   const [currentMaster, setCurrentMaster] = useState<string>('warren_buffett');
   const [masterData, setMasterData] = useState<Record<string, AgentSignal>>({});
+  const [isBookmarked, setIsBookmarked] = useState(false);
   
   // Get ticker from route params
   const { ticker } = route.params;
+  
+  // Check if the stock is bookmarked
+  useEffect(() => {
+    const checkBookmarkStatus = async () => {
+      const bookmarks = await getBookmarkedTickers();
+      setIsBookmarked(bookmarks.includes(ticker));
+    };
+    
+    checkBookmarkStatus();
+  }, [ticker]);
+  
+  // Handle bookmark toggle
+  const handleToggleBookmark = async () => {
+    await toggleBookmark(ticker);
+    const bookmarks = await getBookmarkedTickers();
+    setIsBookmarked(bookmarks.includes(ticker));
+  };
   
   // Get current date for GraphQL query
   const today = new Date();
@@ -169,23 +190,12 @@ const StockDetailScreen = () => {
       const stockInfo = detailsData.stock;
       const prices = stockInfo.prices || [];
       
-      // Sort prices by date
-      const sortedPrices = [...prices].sort((a, b) => 
-        new Date(a.biz_date).getTime() - new Date(b.biz_date).getTime()
-      );
+      // Calculate 3-month change using utility function
+      const changePercent = calculate3MonthChange(prices);
       
-      // Get latest price and previous price for change calculation
+      // Get latest price from sorted prices
+      const sortedPrices = sortPricesByDate(prices);
       const latestPrice = sortedPrices.length > 0 ? sortedPrices[sortedPrices.length - 1] : null;
-      const previousPrice = sortedPrices.length > 1 ? sortedPrices[sortedPrices.length - 2] : null;
-      
-      // Calculate price change
-      let change = 0;
-      let changePercent = 0;
-      
-      if (latestPrice && previousPrice && latestPrice.close && previousPrice.close) {
-        change = latestPrice.close - previousPrice.close;
-        changePercent = (change / previousPrice.close) * 100;
-      }
       
       // Set stock data with real values
       if (latestPrice?.close) {
@@ -193,7 +203,7 @@ const StockDetailScreen = () => {
           ticker: stockInfo.company?.ticker || ticker,
           name: stockInfo.company?.name || ticker,
           price: latestPrice.close,
-          change: change,
+          change: changePercent,
           changePercent: changePercent.toFixed(2)
         });
       }
@@ -320,6 +330,7 @@ const StockDetailScreen = () => {
     <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Header />
+      
       <ScrollView style={styles.scrollView}>
         {/* Stock Header */}
         <View style={styles.stockHeader}>
@@ -327,16 +338,33 @@ const StockDetailScreen = () => {
             <Text style={[styles.ticker, isDark && styles.darkText]}>{stockData.ticker}</Text>
             <Text style={[styles.companyName, isDark && styles.darkMutedText]}>{stockData.name}</Text>
           </View>
-          <View>
-            <Text style={[styles.price, isDark && styles.darkText]}>${stockData.price.toFixed(2)}</Text>
-            <Text 
-              style={[
-                styles.change, 
-                stockData.change > 0 ? styles.positiveChange : styles.negativeChange
-              ]}
+          <View style={styles.headerRight}>
+            <View style={styles.priceSection}>
+              <Text style={[styles.price, isDark && styles.darkText]}>${stockData.price.toFixed(2)}</Text>
+              <View style={styles.changeContainer}>
+                <Text 
+                  style={[
+                    styles.change, 
+                    stockData.change > 0 ? styles.positiveChange : styles.negativeChange
+                  ]}
+                >
+                  {stockData.change > 0 ? '+' : ''}{stockData.change.toFixed(2)}%
+                </Text>
+                <Text style={[styles.changeLabel, isDark && styles.darkMutedText]}>3m chg</Text>
+              </View>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.bookmarkButton}
+              onPress={handleToggleBookmark}
+              hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
             >
-              {stockData.change > 0 ? '+' : ''}{stockData.change.toFixed(2)} ({stockData.changePercent}%)
-            </Text>
+              <Ionicons 
+                name={isBookmarked ? "bookmark" : "bookmark-outline"} 
+                size={24} 
+                color={isDark ? (isBookmarked ? "#A78BFA" : "#666666") : (isBookmarked ? "#8B5CF6" : "#555555")} 
+              />
+            </TouchableOpacity>
           </View>
         </View>
         
@@ -528,6 +556,28 @@ const styles = StyleSheet.create({
   },
   darkMutedText: {
     color: '#AAAAAA',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  priceSection: {
+    alignItems: 'flex-end',
+    marginRight: 8,
+  },
+  bookmarkButton: {
+    padding: 4,
+    alignSelf: 'center',
+  },
+  changeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  changeLabel: {
+    fontSize: 10,
+    marginLeft: 2,
+    color: '#666666',
   },
 });
 

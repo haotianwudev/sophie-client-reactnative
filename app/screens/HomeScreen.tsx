@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -13,6 +13,7 @@ import {
   Animated,
   Dimensions,
   Linking,
+  Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -20,7 +21,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@apollo/client';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '../components/layout/Header';
-import SearchBar from '../components/search/SearchBar';
 import StockCard from '../components/stock/StockCard';
 import FeatureCard from '../components/ui/FeatureCard';
 import Disclaimer from '../components/ui/Disclaimer';
@@ -29,6 +29,8 @@ import { BATCH_STOCKS_QUERY, GET_TOP_TICKERS } from '../lib/graphql/queries';
 import { getGraphQLUri } from '../lib/graphql/gql-config';
 import { testGraphQLConnection } from '../lib/graphql/test-connection';
 import ColorText from '../components/ui/ColorText';
+import { getBookmarkedTickers, toggleBookmark } from '../utils/bookmarkHelper';
+import { calculate3MonthChange } from '../utils/stockCalculations';
 
 // Define interface for stock data
 interface StockData {
@@ -37,6 +39,7 @@ interface StockData {
   price: number;
   change: number;
   sophieScore?: number;
+  isBookmarked?: boolean;
 }
 
 // Define interface for batch stock response from API
@@ -58,6 +61,13 @@ interface BatchStockResponse {
 interface TopTickerResponse {
   ticker: string;
   score: number;
+}
+
+// Define tab options
+enum TabOption {
+  TRENDING = 'trending',
+  BOOKMARKED = 'bookmarked',
+  VIEW_ALL = 'view_all'
 }
 
 // Sophie features
@@ -101,6 +111,12 @@ const HomeScreen = () => {
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   const arrowAnim = React.useRef(new Animated.Value(0)).current;
   
+  // Bookmark related states
+  const [bookmarkedTickers, setBookmarkedTickers] = useState<string[]>([]);
+  const [bookmarkedStocks, setBookmarkedStocks] = useState<StockData[]>([]);
+  const [activeTab, setActiveTab] = useState<TabOption>(TabOption.TRENDING);
+  const showBookmarked = activeTab === TabOption.BOOKMARKED;
+  
   // Get current date for GraphQL query
   const today = new Date();
   const threeMonthsAgo = new Date();
@@ -108,6 +124,16 @@ const HomeScreen = () => {
   
   const endDate = today.toISOString().split('T')[0];
   const startDate = threeMonthsAgo.toISOString().split('T')[0];
+  
+  // Load bookmarked tickers on initial load
+  useEffect(() => {
+    const loadBookmarks = async () => {
+      const bookmarks = await getBookmarkedTickers();
+      setBookmarkedTickers(bookmarks);
+    };
+    
+    loadBookmarks();
+  }, []);
   
   // Test connection on initial load
   useEffect(() => {
@@ -148,6 +174,29 @@ const HomeScreen = () => {
       console.error("Error fetching top tickers:", error);
       // Fallback to a default list if we can't get the top tickers
       setTopTickers(["AAPL", "MSFT", "NVDA", "TSLA", "AMZN"]);
+    }
+  });
+  
+  // Fetch data for bookmarked tickers
+  const { 
+    loading: loadingBookmarkedStocks, 
+    error: bookmarkedStocksError, 
+    data: bookmarkedStocksData,
+    refetch: refetchBookmarked
+  } = useQuery(BATCH_STOCKS_QUERY, {
+    variables: { 
+      tickers: bookmarkedTickers, 
+      startDate, 
+      endDate 
+    },
+    skip: bookmarkedTickers.length === 0, // Skip this query if no bookmarks
+    onCompleted: (data) => {
+      if (data?.batchStocks) {
+        processBookmarkedStockData(data.batchStocks);
+      }
+    },
+    onError: (error) => {
+      console.error("Error fetching bookmarked stock data:", error);
     }
   });
   
@@ -229,34 +278,13 @@ const HomeScreen = () => {
         return;
       }
       
-      // Get latest price data
+      // Get latest price and calculate 3-month change using utility function
       const prices = stockData.prices;
-      
-      // Sort prices by date to ensure correct order
       const sortedPrices = [...prices].sort((a, b) => 
         new Date(a.biz_date).getTime() - new Date(b.biz_date).getTime()
       );
       
       const latestPrice = sortedPrices.length > 0 ? sortedPrices[sortedPrices.length - 1] : null;
-      
-      // Find the price closest to 3 months ago
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-      const threeMonthsAgoTime = threeMonthsAgo.getTime();
-      
-      let closestPriceIndex = 0;
-      let minTimeDiff = Infinity;
-      
-      sortedPrices.forEach((price, index) => {
-        const priceDate = new Date(price.biz_date);
-        const timeDiff = Math.abs(priceDate.getTime() - threeMonthsAgoTime);
-        if (timeDiff < minTimeDiff) {
-          minTimeDiff = timeDiff;
-          closestPriceIndex = index;
-        }
-      });
-      
-      const threeMonthPrice = sortedPrices[closestPriceIndex];
       
       // Skip if price data is invalid
       if (!latestPrice || !latestPrice.close) {
@@ -264,11 +292,8 @@ const HomeScreen = () => {
         return;
       }
       
-      // Calculate percentage change over the period
-      let changePercent = 0;
-      if (threeMonthPrice && threeMonthPrice.close) {
-        changePercent = ((latestPrice.close - threeMonthPrice.close) / threeMonthPrice.close) * 100;
-      }
+      // Calculate percentage change using utility function
+      const changePercent = calculate3MonthChange(prices);
       
       // Company name mapping for consistency
       const companyNames: Record<string, string> = {
@@ -282,8 +307,10 @@ const HomeScreen = () => {
       };
       
       // Get the score directly from the tickerScores map
-      // This ensures we're using the scores from the coveredTickers query
       const sophieScore = tickerScores.get(ticker);
+      
+      // Check if the stock is bookmarked
+      const isBookmarked = bookmarkedTickers.includes(ticker);
       
       // Create the validated stock data entry
       validStocks.push({
@@ -291,11 +318,9 @@ const HomeScreen = () => {
         name: companyNames[ticker] || stockData.company?.name || ticker,
         price: latestPrice.close,
         change: changePercent,
-        sophieScore
+        sophieScore,
+        isBookmarked
       });
-      
-      // Debug log to ensure correct scores
-      console.log(`Stock ${ticker}: Name=${companyNames[ticker]}, Score=${sophieScore}`);
     });
     
     // Only update state if we have valid stocks
@@ -306,6 +331,97 @@ const HomeScreen = () => {
       });
       
       setStocks(sortedStocks);
+    }
+  };
+  
+  // Process bookmarked stock data from the API
+  const processBookmarkedStockData = (batchResults: BatchStockResponse[]) => {
+    const validStocks: StockData[] = [];
+    
+    bookmarkedTickers.forEach(ticker => {
+      // Find matching stock data in the response
+      const stockData = batchResults.find((stock) => 
+        stock.ticker === ticker
+      );
+      
+      // Skip if no data found
+      if (!stockData || !stockData.prices || stockData.prices.length === 0) {
+        console.log(`No data found for ${ticker}, skipping`);
+        return;
+      }
+      
+      // Get latest price and calculate change using utility function
+      const prices = stockData.prices;
+      const sortedPrices = [...prices].sort((a, b) => 
+        new Date(a.biz_date).getTime() - new Date(b.biz_date).getTime()
+      );
+      
+      const latestPrice = sortedPrices.length > 0 ? sortedPrices[sortedPrices.length - 1] : null;
+      
+      // Skip if price data is invalid
+      if (!latestPrice || !latestPrice.close) {
+        console.log(`Invalid price data for ${ticker}, skipping`);
+        return;
+      }
+      
+      // Calculate percentage change using utility function
+      const changePercent = calculate3MonthChange(prices);
+      
+      // Company name mapping for consistency
+      const companyNames: Record<string, string> = {
+        'AAPL': 'Apple Inc.',
+        'MSFT': 'Microsoft Corporation',
+        'NVDA': 'NVIDIA Corporation',
+        'TSLA': 'Tesla, Inc.',
+        'AMZN': 'Amazon.com, Inc.',
+        'GOOGL': 'Alphabet Inc.',
+        'META': 'Meta Platforms, Inc.'
+      };
+      
+      // Get the score from the response
+      const sophieScore = stockData.latestSophieAnalysis?.overall_score;
+      
+      // Create the validated stock data entry
+      validStocks.push({
+        ticker,
+        name: companyNames[ticker] || stockData.company?.name || ticker,
+        price: latestPrice.close,
+        change: changePercent,
+        sophieScore,
+        isBookmarked: true
+      });
+    });
+    
+    // Only update state if we have valid stocks
+    if (validStocks.length > 0) {
+      setBookmarkedStocks(validStocks);
+    }
+  };
+  
+  // Handle bookmark toggle
+  const handleToggleBookmark = async (ticker: string) => {
+    await toggleBookmark(ticker);
+    
+    // Update local bookmarked tickers list
+    const updatedBookmarks = await getBookmarkedTickers();
+    setBookmarkedTickers(updatedBookmarks);
+    
+    // Update isBookmarked flag in stocks list
+    setStocks(prevStocks => 
+      prevStocks.map(stock => 
+        stock.ticker === ticker 
+          ? {...stock, isBookmarked: updatedBookmarks.includes(ticker)} 
+          : stock
+      )
+    );
+    
+    // If the bookmarked stock is removed and we're in bookmarked view, refetch bookmarked stocks
+    if (showBookmarked && !updatedBookmarks.includes(ticker)) {
+      if (updatedBookmarks.length > 0) {
+        refetchBookmarked();
+      } else {
+        setBookmarkedStocks([]);
+      }
     }
   };
   
@@ -359,14 +475,27 @@ const HomeScreen = () => {
     }
   };
 
+  // Determine current stocks list to display
+  const currentStocks = showBookmarked ? bookmarkedStocks : stocks;
+  const isLoadingStocks = showBookmarked 
+    ? loadingBookmarkedStocks && bookmarkedTickers.length > 0
+    : loadingTopTickers || (loading && topTickers.length > 0);
+  const stocksError = showBookmarked ? bookmarkedStocksError : error || topTickersError;
+
+  // Handle tab change
+  const handleTabChange = (tab: TabOption) => {
+    if (tab === TabOption.VIEW_ALL) {
+      navigation.navigate('AllStockReviews');
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Header />
       <ScrollView style={styles.scrollView}>
-        <View style={styles.searchContainer}>
-          <SearchBar />
-        </View>
         
         {/* Connection diagnostic */}
         {renderConnectionDiagnostic()}
@@ -484,32 +613,119 @@ const HomeScreen = () => {
           </TouchableOpacity>
         )}
         
-        {/* Trending Stocks Section */}
+        {/* AI Stock Reviews Section */}
         <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Trending Stocks</Text>
+          <Text style={[styles.sectionTitle, isDark && styles.darkText]}>
+            AI Stock Reviews
+          </Text>
+          
+          {/* Tabs */}
+          <View style={[styles.tabContainer, isDark && styles.darkTabContainer]}>
+            <TouchableOpacity 
+              style={[
+                styles.tab, 
+                activeTab === TabOption.TRENDING && styles.activeTab,
+                activeTab === TabOption.TRENDING && (isDark ? styles.darkActiveTab : {})
+              ]}
+              onPress={() => handleTabChange(TabOption.TRENDING)}
+            >
+              <Ionicons 
+                name="trending-up" 
+                size={18} 
+                color={activeTab === TabOption.TRENDING 
+                  ? (isDark ? '#FFFFFF' : '#6D28D9') 
+                  : (isDark ? '#AAAAAA' : '#666666')} 
+                style={styles.tabIcon}
+              />
+              <Text 
+                style={[
+                  styles.tabText, 
+                  activeTab === TabOption.TRENDING && styles.activeTabText,
+                  isDark && (activeTab === TabOption.TRENDING ? styles.darkActiveTabText : styles.darkTabText)
+                ]}
+              >
+                Trending
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.tab, 
+                activeTab === TabOption.BOOKMARKED && styles.activeTab,
+                activeTab === TabOption.BOOKMARKED && (isDark ? styles.darkActiveTab : {})
+              ]}
+              onPress={() => handleTabChange(TabOption.BOOKMARKED)}
+            >
+              <Ionicons 
+                name="bookmark" 
+                size={18} 
+                color={activeTab === TabOption.BOOKMARKED 
+                  ? (isDark ? '#FFFFFF' : '#6D28D9') 
+                  : (isDark ? '#AAAAAA' : '#666666')} 
+                style={styles.tabIcon}
+              />
+              <Text 
+                style={[
+                  styles.tabText, 
+                  activeTab === TabOption.BOOKMARKED && styles.activeTabText,
+                  isDark && (activeTab === TabOption.BOOKMARKED ? styles.darkActiveTabText : styles.darkTabText)
+                ]}
+              >
+                Bookmarked
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[
+                styles.tab, 
+                activeTab === TabOption.VIEW_ALL && styles.activeTab,
+                activeTab === TabOption.VIEW_ALL && (isDark ? styles.darkActiveTab : {})
+              ]}
+              onPress={() => handleTabChange(TabOption.VIEW_ALL)}
+            >
+              <Ionicons 
+                name="list" 
+                size={18} 
+                color={activeTab === TabOption.VIEW_ALL 
+                  ? (isDark ? '#FFFFFF' : '#6D28D9') 
+                  : (isDark ? '#AAAAAA' : '#666666')} 
+                style={styles.tabIcon}
+              />
+              <Text 
+                style={[
+                  styles.tabText, 
+                  activeTab === TabOption.VIEW_ALL && styles.activeTabText,
+                  isDark && (activeTab === TabOption.VIEW_ALL ? styles.darkActiveTabText : styles.darkTabText)
+                ]}
+              >
+                View All
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
           <View style={styles.stocksContainer}>
-            {loadingTopTickers || (loading && topTickers.length > 0) ? (
+            {isLoadingStocks ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={isDark ? "#6366F1" : "#4F46E5"} />
                 <Text style={[styles.loadingText, isDark && styles.darkText]}>Loading stocks...</Text>
               </View>
-            ) : error || topTickersError ? (
+            ) : stocksError ? (
               <View style={styles.errorContainer}>
                 <Text style={[styles.errorText, isDark && styles.darkText]}>
                   Error loading stock data. Please try again later.
                 </Text>
                 <Text style={[styles.errorDetailText, isDark && styles.darkMutedText]}>
-                  {error?.message || topTickersError?.message}
+                  {stocksError?.message}
                 </Text>
                 <TouchableOpacity 
                   style={styles.retryButton}
-                  onPress={() => refetch()}
+                  onPress={() => showBookmarked ? refetchBookmarked() : refetch()}
                 >
                   <Text style={styles.retryButtonText}>Retry</Text>
                 </TouchableOpacity>
               </View>
-            ) : stocks.length > 0 ? (
-              stocks.map(stock => (
+            ) : currentStocks.length > 0 ? (
+              currentStocks.map(stock => (
                 <TouchableOpacity 
                   key={stock.ticker}
                   onPress={() => navigation.navigate('StockDetail', { ticker: stock.ticker })}
@@ -521,20 +737,34 @@ const HomeScreen = () => {
                     change={stock.change}
                     sophieScore={stock.sophieScore}
                     isDark={isDark}
+                    isBookmarked={stock.isBookmarked}
+                    onToggleBookmark={handleToggleBookmark}
                   />
                 </TouchableOpacity>
               ))
             ) : (
               <View style={styles.errorContainer}>
                 <Text style={[styles.errorText, isDark && styles.darkText]}>
-                  No stock data available at this time. Please try again later.
+                  {showBookmarked 
+                    ? "No bookmarked stocks yet. Bookmark some stocks to see them here." 
+                    : "No stock data available at this time. Please try again later."}
                 </Text>
-                <TouchableOpacity 
-                  style={styles.retryButton}
-                  onPress={() => refetch()}
-                >
-                  <Text style={styles.retryButtonText}>Retry</Text>
-                </TouchableOpacity>
+                {showBookmarked && (
+                  <TouchableOpacity 
+                    style={styles.retryButton}
+                    onPress={() => setActiveTab(TabOption.TRENDING)}
+                  >
+                    <Text style={styles.retryButtonText}>View Trending Stocks</Text>
+                  </TouchableOpacity>
+                )}
+                {!showBookmarked && (
+                  <TouchableOpacity 
+                    style={styles.retryButton}
+                    onPress={() => refetch()}
+                  >
+                    <Text style={styles.retryButtonText}>Retry</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
@@ -557,11 +787,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginBottom: 8,
   },
   diagnosticContainer: {
     margin: 16,
@@ -693,7 +918,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#000000',
@@ -803,6 +1028,93 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#000000',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  rightControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  toggleLabel: {
+    fontSize: 12,
+    marginRight: 6,
+    color: '#666666',
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  darkViewAllButton: {
+    backgroundColor: '#312E81',
+  },
+  viewAllButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6D28D9',
+    marginRight: 4,
+  },
+  darkViewAllButtonText: {
+    color: '#A78BFA',
+  },
+  // Tab styles
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+  },
+  darkTabContainer: {
+    backgroundColor: '#1F2937',
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  activeTab: {
+    backgroundColor: '#EDE9FE',
+    borderBottomWidth: 2,
+    borderBottomColor: '#6D28D9',
+  },
+  darkActiveTab: {
+    backgroundColor: '#312E81',
+    borderBottomColor: '#A78BFA',
+  },
+  tabIcon: {
+    marginRight: 6,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666666',
+  },
+  activeTabText: {
+    color: '#6D28D9',
+    fontWeight: 'bold',
+  },
+  darkTabText: {
+    color: '#AAAAAA',
+  },
+  darkActiveTabText: {
+    color: '#FFFFFF',
   },
 });
 

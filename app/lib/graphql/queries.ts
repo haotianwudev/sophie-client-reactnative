@@ -10,6 +10,16 @@ export const SEARCH_STOCKS = gql`
   }
 `;
 
+// Query to get all covered stocks with SOPHIE scores
+export const GET_ALL_COVERED_STOCKS = gql`
+  query GetAllCoveredStocks {
+    coveredTickers {
+      ticker
+      score
+    }
+  }
+`;
+
 // Query to get stock details for a specific ticker
 export const GET_STOCK_DETAILS = gql`
   query GetStockDetails($ticker: String!, $startDate: String!, $endDate: String!) {

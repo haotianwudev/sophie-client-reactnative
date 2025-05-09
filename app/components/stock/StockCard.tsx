@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface StockCardProps {
   ticker: string;
@@ -8,9 +9,20 @@ interface StockCardProps {
   change: number;
   sophieScore?: number;
   isDark?: boolean;
+  isBookmarked?: boolean;
+  onToggleBookmark?: (ticker: string) => void;
 }
 
-const StockCard = ({ ticker, name, price, change, sophieScore, isDark = false }: StockCardProps) => {
+const StockCard = ({ 
+  ticker, 
+  name, 
+  price, 
+  change, 
+  sophieScore, 
+  isDark = false,
+  isBookmarked = false,
+  onToggleBookmark
+}: StockCardProps) => {
   const isPositive = change >= 0;
   
   // Calculate the score color
@@ -28,26 +40,47 @@ const StockCard = ({ ticker, name, price, change, sophieScore, isDark = false }:
         <Text style={[styles.name, isDark && styles.darkMutedText]} numberOfLines={1}>{name}</Text>
       </View>
       
-      <View style={styles.priceInfo}>
-        <Text style={[styles.price, isDark && styles.darkText]}>${price.toFixed(2)}</Text>
-        <Text 
-          style={[
-            styles.change, 
-            isPositive ? styles.positiveChange : styles.negativeChange
-          ]}
-        >
-          {isPositive ? '+' : ''}{change.toFixed(2)}%
-        </Text>
-      </View>
-      
-      {sophieScore !== undefined && (
-        <View style={[
-          styles.scoreIndicator, 
-          { backgroundColor: getScoreColor(sophieScore) }
-        ]}>
-          <Text style={styles.scoreText}>{Math.round(sophieScore)}</Text>
+      <View style={styles.rightContent}>
+        <View style={styles.priceContainer}>
+          <Text style={[styles.price, isDark && styles.darkText]}>${price.toFixed(2)}</Text>
+          <View style={styles.changeContainer}>
+            <Text 
+              style={[
+                styles.change, 
+                isPositive ? styles.positiveChange : styles.negativeChange
+              ]}
+            >
+              {isPositive ? '+' : ''}{change.toFixed(2)}%
+            </Text>
+            <Text style={[styles.changeLabel, isDark && styles.darkMutedText]}>3m chg</Text>
+          </View>
         </View>
-      )}
+        
+        <View style={styles.indicatorsContainer}>
+          {sophieScore !== undefined && (
+            <View style={[
+              styles.scoreIndicator, 
+              { backgroundColor: getScoreColor(sophieScore) }
+            ]}>
+              <Text style={styles.scoreText}>{Math.round(sophieScore)}</Text>
+            </View>
+          )}
+          
+          {onToggleBookmark && (
+            <TouchableOpacity 
+              style={styles.bookmarkButton}
+              onPress={() => onToggleBookmark(ticker)}
+              hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+            >
+              <Ionicons 
+                name={isBookmarked ? "bookmark" : "bookmark-outline"} 
+                size={22} 
+                color={isDark ? (isBookmarked ? "#A78BFA" : "#666666") : (isBookmarked ? "#8B5CF6" : "#555555")} 
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
     </View>
   );
 };
@@ -71,8 +104,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#222222',
   },
   stockInfo: {
-    flex: 2,
+    flex: 1,
     marginRight: 8,
+  },
+  rightContent: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   ticker: {
     fontSize: 18,
@@ -84,10 +123,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666666',
   },
-  priceInfo: {
-    flex: 1,
+  priceContainer: {
     alignItems: 'flex-end',
-    marginRight: 12,
+  },
+  indicatorsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   price: {
     fontSize: 18,
@@ -95,9 +136,18 @@ const styles = StyleSheet.create({
     color: '#000000',
     marginBottom: 4,
   },
+  changeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   change: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  changeLabel: {
+    fontSize: 10,
+    marginLeft: 2,
+    color: '#666666',
   },
   positiveChange: {
     color: '#22c55e',
@@ -105,12 +155,17 @@ const styles = StyleSheet.create({
   negativeChange: {
     color: '#ef4444',
   },
+  bookmarkButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
   scoreIndicator: {
     width: 36,
     height: 36,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 8,
   },
   scoreText: {
     color: '#FFFFFF',

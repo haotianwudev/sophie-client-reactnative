@@ -9,6 +9,7 @@ import { apolloClient } from './app/lib/graphql/apollo-client';
 // Import screens
 import HomeScreen from './app/screens/HomeScreen';
 import StockDetailScreen from './app/screens/StockDetailScreen';
+import AllStockReviewsScreen from './app/screens/AllStockReviewsScreen';
 
 // Create stack navigator
 const Stack = createStackNavigator();
@@ -26,6 +27,7 @@ export default function App() {
           >
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="StockDetail" component={StockDetailScreen} />
+            <Stack.Screen name="AllStockReviews" component={AllStockReviewsScreen} />
           </Stack.Navigator>
         </NavigationContainer>
         <StatusBar style="auto" />
