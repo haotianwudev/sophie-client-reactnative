@@ -7,7 +7,9 @@ import {
   TouchableOpacity, 
   Image, 
   useColorScheme,
-  ActivityIndicator 
+  ActivityIndicator,
+  Button,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -19,6 +21,8 @@ import StockCard from '../components/stock/StockCard';
 import FeatureCard from '../components/ui/FeatureCard';
 import { HomeScreenNavigationProp } from '../types/navigation';
 import { BATCH_STOCKS_QUERY } from '../lib/graphql/queries';
+import { getGraphQLUri } from '../lib/graphql/gql-config';
+import { testGraphQLConnection } from '../lib/graphql/test-connection';
 
 // Define interface for stock data
 interface StockData {
@@ -62,6 +66,8 @@ const HomeScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [stocks, setStocks] = useState<StockData[]>([]);
+  const [connectionStatus, setConnectionStatus] = useState<boolean | null>(null);
+  const [testingConnection, setTestingConnection] = useState(false);
   const TICKERS = ["AAPL", "MSFT", "NVDA"];
   
   // Get current date for GraphQL query
@@ -72,8 +78,22 @@ const HomeScreen = () => {
   const endDate = today.toISOString().split('T')[0];
   const startDate = threeMonthsAgo.toISOString().split('T')[0];
   
+  // Test connection on initial load
+  useEffect(() => {
+    runConnectionTest();
+  }, []);
+  
+  // Function to test GraphQL connection
+  const runConnectionTest = async () => {
+    setTestingConnection(true);
+    const success = await testGraphQLConnection();
+    setConnectionStatus(success);
+    setTestingConnection(false);
+    console.log(`GraphQL connection test: ${success ? 'SUCCESS' : 'FAILED'}`);
+  };
+  
   // Use Apollo Client to fetch stock data
-  const { loading, error, data } = useQuery(BATCH_STOCKS_QUERY, {
+  const { loading, error, data, refetch } = useQuery(BATCH_STOCKS_QUERY, {
     variables: { 
       tickers: TICKERS, 
       startDate, 
@@ -171,6 +191,37 @@ const HomeScreen = () => {
     }
   };
   
+  // Connection diagnostic component
+  const renderConnectionDiagnostic = () => {
+    if (connectionStatus === false) {
+      return (
+        <View style={styles.diagnosticContainer}>
+          <Text style={[styles.diagnosticText, isDark && styles.darkText]}>
+            Unable to connect to GraphQL server: {getGraphQLUri()}
+          </Text>
+          <Text style={[styles.diagnosticSubText, isDark && styles.darkMutedText]}>
+            Platform: {Platform.OS} | OS Version: {Platform.Version}
+          </Text>
+          <View style={styles.diagnosticButtonContainer}>
+            <Button 
+              title={testingConnection ? "Testing..." : "Test Connection"}
+              onPress={runConnectionTest}
+              disabled={testingConnection}
+              color="#3b82f6"
+            />
+            <Button 
+              title="Retry Data Fetch"
+              onPress={() => refetch()}
+              disabled={loading}
+              color="#10b981"
+            />
+          </View>
+        </View>
+      );
+    }
+    return null;
+  };
+  
   return (
     <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -179,6 +230,9 @@ const HomeScreen = () => {
         <View style={styles.searchContainer}>
           <SearchBar />
         </View>
+        
+        {/* Connection diagnostic */}
+        {renderConnectionDiagnostic()}
         
         {/* Hero Section */}
         <View style={styles.heroSection}>
@@ -226,6 +280,12 @@ const HomeScreen = () => {
                 <Text style={[styles.errorDetailText, isDark && styles.darkMutedText]}>
                   {error.message}
                 </Text>
+                <TouchableOpacity 
+                  style={styles.retryButton}
+                  onPress={() => refetch()}
+                >
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
               </View>
             ) : stocks.length > 0 ? (
               stocks.map(stock => (
@@ -248,6 +308,12 @@ const HomeScreen = () => {
                 <Text style={[styles.errorText, isDark && styles.darkText]}>
                   No stock data available at this time. Please try again later.
                 </Text>
+                <TouchableOpacity 
+                  style={styles.retryButton}
+                  onPress={() => refetch()}
+                >
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -272,6 +338,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginBottom: 8,
+  },
+  diagnosticContainer: {
+    margin: 16,
+    padding: 16,
+    backgroundColor: '#FFEDD5',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F97316',
+  },
+  diagnosticText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#9A3412',
+    marginBottom: 8,
+  },
+  diagnosticSubText: {
+    fontSize: 12,
+    color: '#9A3412',
+    marginBottom: 12,
+  },
+  diagnosticButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   heroSection: {
     paddingHorizontal: 16,
@@ -339,6 +428,18 @@ const styles = StyleSheet.create({
     color: '#666666',
     textAlign: 'center',
     fontSize: 14,
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 4,
+    marginTop: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
   darkText: {
     color: '#FFFFFF',

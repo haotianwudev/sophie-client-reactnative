@@ -4,26 +4,40 @@
  * This file contains configuration for GraphQL endpoints.
  * Edit these settings to switch between local and production GraphQL servers.
  */
+import { Platform } from 'react-native';
 
-// Set this to true to use local GraphQL server, false to use production
-export const USE_LOCAL_GQL = true;
+// Set this to false to use production GraphQL server
+export const USE_LOCAL_GQL = false;
 
-// Local GraphQL server port
+// Local GraphQL server port (only used when USE_LOCAL_GQL is true)
 export const LOCAL_GQL_PORT = 4000;
 
-// Default fallback for production GraphQL URI if not set in environment
-const DEFAULT_PROD_URI = "https://api.sophieai.dev/graphql";
+// Development machine IP address - Your Wi-Fi network IP address (only used when USE_LOCAL_GQL is true)
+export const DEV_MACHINE_IP = "192.168.1.172";
 
-// Get the appropriate GraphQL URI based on configuration
+// Production GraphQL URI on Render
+const PRODUCTION_GRAPHQL_URI = "https://sophie-render-server.onrender.com/graphql";
+
+// Get the appropriate GraphQL URI based on configuration and platform
 export function getGraphQLUri(): string {
-  // For React Native, we can't use process.env directly like in Next.js
-  // Instead, we would typically use react-native-dotenv or similar
-  
   // If using local GraphQL server
   if (USE_LOCAL_GQL) {
-    return `http://localhost:${LOCAL_GQL_PORT}/graphql`;
+    if (Platform.OS === 'web') {
+      // Web version can use localhost
+      return `http://localhost:${LOCAL_GQL_PORT}/graphql`;
+    } else if (Platform.OS === 'android') {
+      // Android emulator uses 10.0.2.2 to access host machine
+      return `http://10.0.2.2:${LOCAL_GQL_PORT}/graphql`;
+    } else if (Platform.OS === 'ios') {
+      // iOS simulator can use localhost
+      return `http://localhost:${LOCAL_GQL_PORT}/graphql`;
+    } else {
+      // For other platforms or physical devices, use the actual IP
+      return `http://${DEV_MACHINE_IP}:${LOCAL_GQL_PORT}/graphql`;
+    }
   }
   
-  // Return environment variable or default if not set
-  return DEFAULT_PROD_URI;
+  // Return production URI
+  console.log(`Using production GraphQL endpoint: ${PRODUCTION_GRAPHQL_URI}`);
+  return PRODUCTION_GRAPHQL_URI;
 } 

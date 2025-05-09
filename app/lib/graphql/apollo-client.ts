@@ -1,5 +1,6 @@
 import { ApolloClient, InMemoryCache, HttpLink, from } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
+import { Platform } from 'react-native';
 import { getGraphQLUri } from "./gql-config";
 
 // Create and configure Apollo client for the app
@@ -8,7 +9,7 @@ export const createApolloClient = () => {
   const graphqlUri = getGraphQLUri();
   
   // Log the GraphQL URI for debugging
-  console.log(`Connecting to GraphQL endpoint: ${graphqlUri}`);
+  console.log(`Connecting to GraphQL endpoint: ${graphqlUri} from ${Platform.OS}`);
   
   // Error handling link
   const errorLink = onError(({ graphQLErrors, networkError }) => {
@@ -26,11 +27,19 @@ export const createApolloClient = () => {
     }
   });
 
+  // Create the HTTP link with proper configuration
   const httpLink = new HttpLink({
     uri: graphqlUri,
+    credentials: 'omit',
+    // Disable Apollo-specific headers that could cause CORS issues
+    useGETForQueries: false,
+    includeExtensions: false,
+    headers: {
+      'Content-Type': 'application/json',
+    }
   });
 
-  // Create the Apollo client
+  // Create the Apollo client with simpler configuration
   const client = new ApolloClient({
     link: from([errorLink, httpLink]),
     cache: new InMemoryCache(),
@@ -42,6 +51,10 @@ export const createApolloClient = () => {
         fetchPolicy: 'network-only',
       },
     },
+    // Disable client identification to avoid CORS issues
+    name: undefined,
+    version: undefined,
+    queryDeduplication: false
   });
   
   console.log('Apollo client created successfully');
