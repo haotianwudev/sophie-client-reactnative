@@ -330,12 +330,7 @@ const StockDetailScreen = () => {
   return (
     <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <Header 
-        title={stockData?.ticker || ticker}
-        subtitle={stockData?.name || ''}
-        showBackButton
-      />
-      
+      <Header />
       <ScrollView 
         style={[styles.container, isDark && styles.darkContainer]}
         showsVerticalScrollIndicator={false}
