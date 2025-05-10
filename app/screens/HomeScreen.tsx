@@ -75,26 +75,22 @@ const FEATURES = [
   { 
     id: 1, 
     title: 'AI-Powered Analysis', 
-    description: 'Get intelligent stock analysis based on fundamentals, technicals, and sentiment',
-    icon: 'brain' 
+    description: 'Smart analysis using Large Language Models',
   },
   { 
     id: 2, 
-    title: 'Trend Detection', 
-    description: 'Discover trending stocks and market patterns',
-    icon: 'trending-up' 
+    title: 'Investment Education', 
+    description: 'Thorough methodological explanations',
   },
   { 
     id: 3, 
-    title: 'Investor Education', 
-    description: 'Learn investment concepts and strategies',
-    icon: 'graduation-cap' 
+    title: 'Investment Masters', 
+    description: 'Insights from Buffett and Munger philosophies',
   },
   { 
     id: 4, 
-    title: 'Real-time Charts', 
-    description: 'View interactive stock charts with technical indicators',
-    icon: 'line-chart' 
+    title: 'Periodic Stock Reviews', 
+    description: 'Not just one-time analysis! Update periodically.',
   },
 ];
 
@@ -558,9 +554,6 @@ const HomeScreen = () => {
                     SOPHIE
                   </ColorText>
                 </View>
-                <Text style={[styles.heroSubtitle, isDark && styles.darkText]}>
-                  Stock/Option Portfolio Helper for Investment and Education
-                </Text>
                 <Text style={[styles.heroDescription, isDark && styles.darkMutedText]}>
                   Your AI-powered financial analyst help you learn stock analysis from investment masters.
                 </Text>
@@ -575,7 +568,6 @@ const HomeScreen = () => {
                       key={feature.id}
                       title={feature.title}
                       description={feature.description}
-                      icon={feature.icon}
                       isDark={isDark}
                     />
                   ))}
