@@ -249,6 +249,7 @@ export interface AgentSignal {
 
 interface InvestmentMasterAnalysisProps {
   currentAgent: AgentSignal | null;
+  allAgentSignals: Record<string, AgentSignal>;
   loading?: boolean;
   onSelectAgent?: (agent: string) => void;
 }
@@ -319,6 +320,7 @@ const getAgentImageSource = (agent: string) => {
 
 const InvestmentMasterAnalysis = ({ 
   currentAgent, 
+  allAgentSignals,
   loading = false,
   onSelectAgent
 }: InvestmentMasterAnalysisProps) => {
@@ -431,45 +433,48 @@ const InvestmentMasterAnalysis = ({
           }}
           onMomentumScrollEnd={handleScrollEnd}
         >
-          {availableAgents.map((agent) => (
-            <TouchableOpacity
-              key={agent}
-              style={[
-                styles.agentCard,
-                currentAgent?.agent === agent && styles.selectedAgentCard,
-                isDark && styles.darkAgentCard,
-                currentAgent?.agent === agent && isDark && styles.darkSelectedAgentCard
-              ]}
-              onPress={() => onSelectAgent && onSelectAgent(agent)}
-            >
-              <Image
-                source={getAgentImageSource(agent)}
-                style={styles.agentCardImage}
-              />
-              <Text
+          {availableAgents.map((agent) => {
+            const agentSignal = allAgentSignals[agent];
+            return (
+              <TouchableOpacity
+                key={agent}
                 style={[
-                  styles.agentCardText,
-                  currentAgent?.agent === agent && styles.selectedAgentCardText,
-                  isDark && styles.darkAgentCardText
+                  styles.agentCard,
+                  currentAgent?.agent === agent && styles.selectedAgentCard,
+                  isDark && styles.darkAgentCard,
+                  currentAgent?.agent === agent && isDark && styles.darkSelectedAgentCard
                 ]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
+                onPress={() => onSelectAgent && onSelectAgent(agent)}
               >
-                {formatAgentName(agent)}
-              </Text>
-              {/* Signal badge */}
-              <View 
-                style={[
-                  styles.agentCardSignalBadge, 
-                  { backgroundColor: getSignalColor(currentAgent?.agent === agent ? currentAgent.signal : 'neutral') }
-                ]}
-              >
-                <Text style={styles.agentCardSignalText}>
-                  {currentAgent?.agent === agent ? currentAgent.signal.toUpperCase() : 'NEUTRAL'}
+                <Image
+                  source={getAgentImageSource(agent)}
+                  style={styles.agentCardImage}
+                />
+                <Text
+                  style={[
+                    styles.agentCardText,
+                    currentAgent?.agent === agent && styles.selectedAgentCardText,
+                    isDark && styles.darkAgentCardText
+                  ]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {formatAgentName(agent)}
                 </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+                {/* Signal badge */}
+                <View 
+                  style={[
+                    styles.agentCardSignalBadge, 
+                    { backgroundColor: getSignalColor(agentSignal?.signal || 'neutral') }
+                  ]}
+                >
+                  <Text style={styles.agentCardSignalText}>
+                    {agentSignal?.signal?.toUpperCase() || 'NEUTRAL'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 

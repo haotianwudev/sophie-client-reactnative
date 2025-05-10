@@ -435,6 +435,7 @@ const StockDetailScreen = () => {
             // Investment Masters Analysis
             <InvestmentMasterAnalysis 
               currentAgent={currentMaster ? masterData[currentMaster] : null}
+              allAgentSignals={masterData}
               loading={isMasterLoading}
               onSelectAgent={handleMasterChange}
             />
