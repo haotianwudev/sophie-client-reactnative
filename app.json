@@ -20,6 +20,7 @@
       "bundleIdentifier": "com.sophieai.client"
     },
     "android": {
+      "privacyPolicy": "https://sophieai.dev/privacy-policy.html",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
