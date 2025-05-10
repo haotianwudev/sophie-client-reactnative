@@ -20,6 +20,7 @@ type RootStackParamList = {
   AllStockReviews: undefined;
   TechnicalAnalysis: { ticker: string };
   SentimentAnalysis: { ticker: string };
+  FundamentalAnalysis: { ticker: string };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -427,22 +428,81 @@ const DetailedAnalysisTabs = ({
                 Confidence: {fundamentalData.confidence}%
               </Text>
               
-              <Text style={[styles.subSectionTitle, isDark && styles.darkText]}>
-                Growth Metrics
-              </Text>
-              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                Revenue growth: {fundamentalData.revenue_growth}%, EPS growth: {fundamentalData.eps_growth}%
-              </Text>
+              {/* Simplified horizontal subsection summaries */}
+              <View style={styles.subsectionsContainer}>
+                {/* Profitability */}
+                <View style={[
+                  styles.subsectionSimple, 
+                  isDark && styles.darkSubsectionSimple,
+                  {borderLeftColor: getSignalColor(fundamentalData.profitability_signal)}
+                ]}>
+                  <View style={styles.subsectionHeader}>
+                    <MaterialCommunityIcons name="chart-pie" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                    <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                      Profitability: <Text style={{color: getSignalColor(fundamentalData.profitability_signal)}}>{fundamentalData.profitability_signal.toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Growth */}
+                <View style={[
+                  styles.subsectionSimple, 
+                  isDark && styles.darkSubsectionSimple,
+                  {borderLeftColor: getSignalColor(fundamentalData.growth_signal)}
+                ]}>
+                  <View style={styles.subsectionHeader}>
+                    <Feather name="trending-up" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                    <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                      Growth: <Text style={{color: getSignalColor(fundamentalData.growth_signal)}}>{fundamentalData.growth_signal.toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Financial Health */}
+                <View style={[
+                  styles.subsectionSimple, 
+                  isDark && styles.darkSubsectionSimple,
+                  {borderLeftColor: getSignalColor(fundamentalData.health_signal)}
+                ]}>
+                  <View style={styles.subsectionHeader}>
+                    <MaterialCommunityIcons name="shield-check" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                    <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                      Financial Health: <Text style={{color: getSignalColor(fundamentalData.health_signal)}}>{fundamentalData.health_signal.toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Valuation */}
+                <View style={[
+                  styles.subsectionSimple, 
+                  isDark && styles.darkSubsectionSimple,
+                  {borderLeftColor: getSignalColor(fundamentalData.valuation_signal)}
+                ]}>
+                  <View style={styles.subsectionHeader}>
+                    <FontAwesome name="balance-scale" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                    <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                      Valuation: <Text style={{color: getSignalColor(fundamentalData.valuation_signal)}}>{fundamentalData.valuation_signal.toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+              </View>
               
-              <Text style={[styles.subSectionTitle, isDark && styles.darkText]}>
-                Profitability
-              </Text>
-              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                Gross margin: {fundamentalData.gross_margin}%, Operating margin: {fundamentalData.operating_margin}%
-              </Text>
-              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                ROE: {fundamentalData.roe}%, ROA: {fundamentalData.roa}%
-              </Text>
+              {ticker && (
+                <TouchableOpacity 
+                  style={[styles.viewMoreButton, isDark && styles.darkViewMoreButton]}
+                  onPress={() => navigation.navigate('FundamentalAnalysis', { ticker })}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.viewMoreText, isDark && styles.darkViewMoreText]}>
+                    View Detailed Analysis
+                  </Text>
+                  <Ionicons 
+                    name="chevron-forward" 
+                    size={16} 
+                    color={isDark ? '#FFFFFF' : '#4B5563'} 
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             <Text style={[styles.placeholder, isDark && styles.darkMutedText]}>
