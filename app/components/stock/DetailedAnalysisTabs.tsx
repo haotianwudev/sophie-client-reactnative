@@ -21,6 +21,7 @@ type RootStackParamList = {
   TechnicalAnalysis: { ticker: string };
   SentimentAnalysis: { ticker: string };
   FundamentalAnalysis: { ticker: string };
+  ValuationAnalysis: { ticker: string };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -60,6 +61,11 @@ const DetailedAnalysisTabs = ({
       case 'neutral': return '#f59e0b'; // yellow
       default: return '#6b7280'; // gray
     }
+  };
+
+  // Format percentage
+  const formatPercent = (value: number): string => {
+    return `${(value * 100).toFixed(1)}%`;
   };
 
   // Determine signals for each analysis type
@@ -537,19 +543,104 @@ const DetailedAnalysisTabs = ({
 
           {valuationData && Array.isArray(valuationData) && valuationData.length > 0 ? (
             <View style={styles.cardContent}>
-              {valuationData.map((val, index) => (
-                <View key={index} style={styles.valuationItem}>
-                  <Text style={[styles.subSectionTitle, isDark && styles.darkText]}>
-                    {val.metric_name}
+              {/* Find weighted valuation for overall summary */}
+              {valuationData.find(v => v.valuation_method === "weighted") && (
+                <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
+                  Overall Gap: {formatPercent(valuationData.find(v => v.valuation_method === "weighted")?.gap || 0)}
+                </Text>
+              )}
+              
+              {/* Simplified horizontal subsection summaries */}
+              <View style={styles.subsectionsContainer}>
+                {/* DCF */}
+                {valuationData.find(v => v.valuation_method === "dcf") && (
+                  <View style={[
+                    styles.subsectionSimple, 
+                    isDark && styles.darkSubsectionSimple,
+                    {borderLeftColor: getSignalColor(valuationData.find(v => v.valuation_method === "dcf")?.signal || 'neutral')}
+                  ]}>
+                    <View style={styles.subsectionHeader}>
+                      <MaterialCommunityIcons name="calculator" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                      <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                        DCF: <Text style={{color: getSignalColor(valuationData.find(v => v.valuation_method === "dcf")?.signal || 'neutral')}}>
+                          {valuationData.find(v => v.valuation_method === "dcf")?.signal.toUpperCase()}
+                        </Text>
+                      </Text>
+                    </View>
+                  </View>
+                )}
+                
+                {/* EV/EBITDA */}
+                {valuationData.find(v => v.valuation_method === "ev_ebitda") && (
+                  <View style={[
+                    styles.subsectionSimple, 
+                    isDark && styles.darkSubsectionSimple,
+                    {borderLeftColor: getSignalColor(valuationData.find(v => v.valuation_method === "ev_ebitda")?.signal || 'neutral')}
+                  ]}>
+                    <View style={styles.subsectionHeader}>
+                      <MaterialCommunityIcons name="chart-line" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                      <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                        EV/EBITDA: <Text style={{color: getSignalColor(valuationData.find(v => v.valuation_method === "ev_ebitda")?.signal || 'neutral')}}>
+                          {valuationData.find(v => v.valuation_method === "ev_ebitda")?.signal.toUpperCase()}
+                        </Text>
+                      </Text>
+                    </View>
+                  </View>
+                )}
+                
+                {/* Owner Earnings */}
+                {valuationData.find(v => v.valuation_method === "owner_earnings") && (
+                  <View style={[
+                    styles.subsectionSimple, 
+                    isDark && styles.darkSubsectionSimple,
+                    {borderLeftColor: getSignalColor(valuationData.find(v => v.valuation_method === "owner_earnings")?.signal || 'neutral')}
+                  ]}>
+                    <View style={styles.subsectionHeader}>
+                      <MaterialCommunityIcons name="cash-multiple" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                      <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                        Owner Earnings: <Text style={{color: getSignalColor(valuationData.find(v => v.valuation_method === "owner_earnings")?.signal || 'neutral')}}>
+                          {valuationData.find(v => v.valuation_method === "owner_earnings")?.signal.toUpperCase()}
+                        </Text>
+                      </Text>
+                    </View>
+                  </View>
+                )}
+                
+                {/* Residual Income */}
+                {valuationData.find(v => v.valuation_method === "residual_income") && (
+                  <View style={[
+                    styles.subsectionSimple, 
+                    isDark && styles.darkSubsectionSimple,
+                    {borderLeftColor: getSignalColor(valuationData.find(v => v.valuation_method === "residual_income")?.signal || 'neutral')}
+                  ]}>
+                    <View style={styles.subsectionHeader}>
+                      <MaterialCommunityIcons name="chart-bell-curve" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                      <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                        Residual Income: <Text style={{color: getSignalColor(valuationData.find(v => v.valuation_method === "residual_income")?.signal || 'neutral')}}>
+                          {valuationData.find(v => v.valuation_method === "residual_income")?.signal.toUpperCase()}
+                        </Text>
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+              
+              {ticker && (
+                <TouchableOpacity 
+                  style={[styles.viewMoreButton, isDark && styles.darkViewMoreButton]}
+                  onPress={() => navigation.navigate('ValuationAnalysis', { ticker })}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.viewMoreText, isDark && styles.darkViewMoreText]}>
+                    View Detailed Analysis
                   </Text>
-                  <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                    Value: {val.value} ({val.signal.toUpperCase()})
-                  </Text>
-                  <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                    Peers: {val.peer_avg}, Sector: {val.sector_avg}
-                  </Text>
-                </View>
-              ))}
+                  <Ionicons 
+                    name="chevron-forward" 
+                    size={16} 
+                    color={isDark ? '#FFFFFF' : '#4B5563'} 
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             <Text style={[styles.placeholder, isDark && styles.darkMutedText]}>

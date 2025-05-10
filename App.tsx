@@ -13,6 +13,7 @@ import AllStockReviewsScreen from './app/screens/AllStockReviewsScreen';
 import TechnicalAnalysisScreen from './app/screens/TechnicalAnalysisScreen';
 import SentimentAnalysisScreen from './app/screens/SentimentAnalysisScreen';
 import FundamentalAnalysisScreen from './app/screens/FundamentalAnalysisScreen';
+import ValuationAnalysisScreen from './app/screens/ValuationAnalysisScreen';
 
 // Create stack navigator
 type RootStackParamList = {
@@ -22,6 +23,7 @@ type RootStackParamList = {
   TechnicalAnalysis: { ticker: string };
   SentimentAnalysis: { ticker: string };
   FundamentalAnalysis: { ticker: string };
+  ValuationAnalysis: { ticker: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -43,6 +45,7 @@ export default function App() {
             <Stack.Screen name="TechnicalAnalysis" component={TechnicalAnalysisScreen} />
             <Stack.Screen name="SentimentAnalysis" component={SentimentAnalysisScreen} />
             <Stack.Screen name="FundamentalAnalysis" component={FundamentalAnalysisScreen} />
+            <Stack.Screen name="ValuationAnalysis" component={ValuationAnalysisScreen} />
           </Stack.Navigator>
         </NavigationContainer>
         <StatusBar style="auto" />
