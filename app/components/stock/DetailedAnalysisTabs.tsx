@@ -5,7 +5,8 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   useColorScheme,
-  ScrollView
+  ScrollView,
+  Animated
 } from 'react-native';
 import AnalysisRadarChart from './AnalysisRadarChart';
 
@@ -27,6 +28,11 @@ const DetailedAnalysisTabs = ({
 }: DetailedAnalysisTabsProps) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  
+  // Animated value for scroll indicator
+  const scrollX = React.useRef(new Animated.Value(0)).current;
+  const [contentWidth, setContentWidth] = React.useState(0);
+  const [containerWidth, setContainerWidth] = React.useState(0);
 
   // Get signal color based on value
   const getSignalColor = (signal: string): string => {
@@ -105,7 +111,13 @@ const DetailedAnalysisTabs = ({
   }
 
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <View 
+      style={[styles.container, isDark && styles.darkContainer]}
+      onLayout={(event) => {
+        const { width } = event.nativeEvent.layout;
+        setContainerWidth(width);
+      }}
+    >
       
       {/* Radar Chart with title */}
       <View style={styles.radarSection}>
@@ -126,14 +138,46 @@ const DetailedAnalysisTabs = ({
         </Text>
       </View>
 
+      {/* Horizontal scroll indicator */}
+      <View style={styles.scrollIndicatorContainer}>
+        {containerWidth > 0 && contentWidth > 0 && (
+          <Animated.View 
+            style={[
+              styles.scrollIndicator, 
+              isDark && styles.darkScrollIndicator,
+              {
+                width: `${(containerWidth / contentWidth) * 100}%`,
+                transform: [
+                  {
+                    translateX: scrollX.interpolate({
+                      inputRange: [0, contentWidth - containerWidth],
+                      outputRange: [0, containerWidth - (containerWidth * containerWidth / contentWidth)],
+                      extrapolate: 'clamp'
+                    })
+                  }
+                ]
+              }
+            ]} 
+          />
+        )}
+      </View>
+
       {/* Horizontally scrollable analysis cards */}
       <ScrollView
         horizontal
-        showsHorizontalScrollIndicator={true}
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
         decelerationRate="fast"
         snapToInterval={290} // Width of card + margin
         snapToAlignment="start"
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+        onContentSizeChange={(width) => {
+          setContentWidth(width);
+        }}
       >
         {/* Technical Analysis Card */}
         <View 
@@ -469,6 +513,23 @@ const styles = StyleSheet.create({
   },
   valuationItem: {
     marginBottom: 8,
+  },
+  scrollIndicatorContainer: {
+    width: '100%',
+    height: 6,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 3,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  scrollIndicator: {
+    width: '30%',
+    height: '100%',
+    backgroundColor: '#9ca3af',
+    borderRadius: 3,
+  },
+  darkScrollIndicator: {
+    backgroundColor: '#4b5563',
   },
 });
 
