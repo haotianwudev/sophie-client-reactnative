@@ -26,6 +26,7 @@ import {
 import StockAnalysisSummary from '../components/stock/StockAnalysisSummary';
 import InvestmentMasterAnalysis, { AgentSignal } from '../components/stock/InvestmentMasterAnalysis';
 import DetailedAnalysisTabs from '../components/stock/DetailedAnalysisTabs';
+import StockInfoSections from '../components/stock/StockInfoSections';
 import Disclaimer from '../components/ui/Disclaimer';
 import { Ionicons } from '@expo/vector-icons';
 import { getBookmarkedTickers, toggleBookmark } from '../utils/bookmarkHelper';
@@ -329,121 +330,137 @@ const StockDetailScreen = () => {
   return (
     <SafeAreaView style={[styles.container, isDark && styles.darkContainer]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <Header />
+      <Header 
+        title={stockData?.ticker || ticker}
+        subtitle={stockData?.name || ''}
+        showBackButton
+      />
       
-      <ScrollView style={styles.scrollView}>
-        {/* Stock Header */}
-        <View style={styles.stockHeader}>
-          <View>
-            <Text style={[styles.ticker, isDark && styles.darkText]}>{stockData.ticker}</Text>
-            <Text style={[styles.companyName, isDark && styles.darkMutedText]}>{stockData.name}</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <View style={styles.priceSection}>
-              <Text style={[styles.price, isDark && styles.darkText]}>${stockData.price.toFixed(2)}</Text>
-              <View style={styles.changeContainer}>
-                <Text 
+      <ScrollView 
+        style={[styles.container, isDark && styles.darkContainer]}
+        showsVerticalScrollIndicator={false}
+      >
+        {detailsLoading ? (
+          <ActivityIndicator size="large" color={isDark ? '#FFFFFF' : '#111827'} />
+        ) : detailsError ? (
+          <Text style={[styles.errorText, isDark && styles.darkText]}>
+            Error loading stock details
+          </Text>
+        ) : detailsData?.stock ? (
+          <>
+            <StockInfoSections
+              company={detailsData.stock.company}
+              financialMetrics={detailsData.stock.financialMetricsLatest}
+              prices={detailsData.stock.prices}
+              price={stockData.price}
+              change={stockData.change}
+              changePercent={stockData.changePercent}
+              ticker={stockData.ticker}
+              name={stockData.name}
+              isBookmarked={isBookmarked}
+              onToggleBookmark={handleToggleBookmark}
+            />
+            
+            <StockAnalysisSummary
+              sophieData={{
+                signal: sophieData?.latestSophieAnalysis?.signal || 'neutral',
+                confidence: sophieData?.latestSophieAnalysis?.confidence || 0,
+                overall_score: sophieData?.latestSophieAnalysis?.overall_score || 0,
+                reasoning: sophieData?.latestSophieAnalysis?.reasoning || '',
+                short_term_outlook: sophieData?.latestSophieAnalysis?.short_term_outlook || '',
+                medium_term_outlook: sophieData?.latestSophieAnalysis?.medium_term_outlook || '',
+                long_term_outlook: sophieData?.latestSophieAnalysis?.long_term_outlook || '',
+                bullish_factors: sophieData?.latestSophieAnalysis?.bullish_factors || [],
+                bearish_factors: sophieData?.latestSophieAnalysis?.bearish_factors || [],
+                risks: sophieData?.latestSophieAnalysis?.risks || [],
+                model_name: sophieData?.latestSophieAnalysis?.model_name || '',
+                model_display_name: sophieData?.latestSophieAnalysis?.model_display_name || ''
+              }}
+              loading={sophieLoading}
+            />
+            
+            {/* Tabs */}
+            <View style={styles.tabsContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.tab,
+                  activeTab === AnalysisTab.SOPHIE && styles.activeTab,
+                  isDark && styles.darkTab,
+                  activeTab === AnalysisTab.SOPHIE && isDark && styles.darkActiveTab
+                ]}
+                onPress={() => handleTabChange(AnalysisTab.SOPHIE)}
+              >
+                <Text
                   style={[
-                    styles.change, 
-                    stockData.change > 0 ? styles.positiveChange : styles.negativeChange
+                    styles.tabText,
+                    activeTab === AnalysisTab.SOPHIE && styles.activeTabText,
+                    isDark && styles.darkTabText
                   ]}
                 >
-                  {stockData.change > 0 ? '+' : ''}{stockData.change.toFixed(2)}%
+                  SOPHIE
                 </Text>
-                <Text style={[styles.changeLabel, isDark && styles.darkMutedText]}>3m chg</Text>
-              </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.tab,
+                  activeTab === AnalysisTab.MASTERS && styles.activeTab,
+                  isDark && styles.darkTab,
+                  activeTab === AnalysisTab.MASTERS && isDark && styles.darkActiveTab
+                ]}
+                onPress={() => handleTabChange(AnalysisTab.MASTERS)}
+              >
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === AnalysisTab.MASTERS && styles.activeTabText,
+                    isDark && styles.darkTabText
+                  ]}
+                >
+                  Investment Masters
+                </Text>
+              </TouchableOpacity>
             </View>
             
-            <TouchableOpacity 
-              style={styles.bookmarkButton}
-              onPress={handleToggleBookmark}
-              hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-            >
-              <Ionicons 
-                name={isBookmarked ? "bookmark" : "bookmark-outline"} 
-                size={24} 
-                color={isDark ? (isBookmarked ? "#A78BFA" : "#666666") : (isBookmarked ? "#8B5CF6" : "#555555")} 
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        {/* Tabs */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === AnalysisTab.SOPHIE && styles.activeTab,
-              isDark && styles.darkTab,
-              activeTab === AnalysisTab.SOPHIE && isDark && styles.darkActiveTab
-            ]}
-            onPress={() => handleTabChange(AnalysisTab.SOPHIE)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === AnalysisTab.SOPHIE && styles.activeTabText,
-                isDark && styles.darkTabText
-              ]}
-            >
-              SOPHIE
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === AnalysisTab.MASTERS && styles.activeTab,
-              isDark && styles.darkTab,
-              activeTab === AnalysisTab.MASTERS && isDark && styles.darkActiveTab
-            ]}
-            onPress={() => handleTabChange(AnalysisTab.MASTERS)}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === AnalysisTab.MASTERS && styles.activeTabText,
-                isDark && styles.darkTabText
-              ]}
-            >
-              Investment Masters
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Analysis Content */}
-        <View style={styles.sectionContainer}>
-          {activeTab === AnalysisTab.SOPHIE ? (
-            <>
-              {/* SOPHIE Analysis */}
-              <StockAnalysisSummary 
-                sophieData={sophieAnalysis || defaultSophieData}
-                loading={sophieLoading && !sophieAnalysis}
-              />
-              
-              {/* Detailed Analysis Tabs */}
-              <DetailedAnalysisTabs
-                technicalData={technicalsData?.latestTechnicals}
-                sentimentData={sentimentData?.latestSentiment}
-                fundamentalData={fundamentalsData?.latestFundamentals}
-                valuationData={valuationsData?.latestValuations}
-                loading={isDetailedAnalysisLoading}
-                ticker={stockData?.ticker}
-              />
-            </>
-          ) : (
-            // Investment Masters Analysis
-            <InvestmentMasterAnalysis 
-              currentAgent={currentMaster ? masterData[currentMaster] : null}
-              allAgentSignals={masterData}
-              loading={isMasterLoading}
-              onSelectAgent={handleMasterChange}
-            />
-          )}
-        </View>
-        
-        {/* Disclaimer */}
-        <Disclaimer />
+            {/* Analysis Content */}
+            <View style={styles.sectionContainer}>
+              {activeTab === AnalysisTab.SOPHIE ? (
+                <>
+                  {/* SOPHIE Analysis */}
+                  <StockAnalysisSummary 
+                    sophieData={sophieAnalysis || defaultSophieData}
+                    loading={sophieLoading && !sophieAnalysis}
+                  />
+                  
+                  {/* Detailed Analysis Tabs */}
+                  <DetailedAnalysisTabs
+                    technicalData={technicalsData?.latestTechnicals}
+                    sentimentData={sentimentData?.latestSentiment}
+                    fundamentalData={fundamentalsData?.latestFundamentals}
+                    valuationData={valuationsData?.latestValuations}
+                    loading={isDetailedAnalysisLoading}
+                    ticker={stockData?.ticker}
+                  />
+                </>
+              ) : (
+                // Investment Masters Analysis
+                <InvestmentMasterAnalysis 
+                  currentAgent={currentMaster ? masterData[currentMaster] : null}
+                  allAgentSignals={masterData}
+                  loading={isMasterLoading}
+                  onSelectAgent={handleMasterChange}
+                />
+              )}
+            </View>
+            
+            {/* Disclaimer */}
+            <Disclaimer />
+          </>
+        ) : (
+          <Text style={[styles.errorText, isDark && styles.darkText]}>
+            Error loading stock details
+          </Text>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
