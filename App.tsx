@@ -10,9 +10,17 @@ import { apolloClient } from './app/lib/graphql/apollo-client';
 import HomeScreen from './app/screens/HomeScreen';
 import StockDetailScreen from './app/screens/StockDetailScreen';
 import AllStockReviewsScreen from './app/screens/AllStockReviewsScreen';
+import TechnicalAnalysisScreen from './app/screens/TechnicalAnalysisScreen';
 
 // Create stack navigator
-const Stack = createStackNavigator();
+type RootStackParamList = {
+  Home: undefined;
+  StockDetail: { ticker: string };
+  AllStockReviews: undefined;
+  TechnicalAnalysis: { ticker: string };
+};
+
+const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
@@ -28,6 +36,7 @@ export default function App() {
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="StockDetail" component={StockDetailScreen} />
             <Stack.Screen name="AllStockReviews" component={AllStockReviewsScreen} />
+            <Stack.Screen name="TechnicalAnalysis" component={TechnicalAnalysisScreen} />
           </Stack.Navigator>
         </NavigationContainer>
         <StatusBar style="auto" />

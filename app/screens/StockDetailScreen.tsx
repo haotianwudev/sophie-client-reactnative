@@ -428,6 +428,7 @@ const StockDetailScreen = () => {
                 fundamentalData={fundamentalsData?.latestFundamentals}
                 valuationData={valuationsData?.latestValuations}
                 loading={isDetailedAnalysisLoading}
+                ticker={stockData?.ticker}
               />
             </>
           ) : (

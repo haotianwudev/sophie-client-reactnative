@@ -9,6 +9,19 @@ import {
   Animated
 } from 'react-native';
 import AnalysisRadarChart from './AnalysisRadarChart';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Ionicons } from '@expo/vector-icons';
+
+// Define navigation type
+type RootStackParamList = {
+  Home: undefined;
+  StockDetail: { ticker: string };
+  AllStockReviews: undefined;
+  TechnicalAnalysis: { ticker: string };
+};
+
+type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 // Define props for the component
 interface DetailedAnalysisTabsProps {
@@ -17,6 +30,7 @@ interface DetailedAnalysisTabsProps {
   fundamentalData?: any;
   valuationData?: any;
   loading?: boolean;
+  ticker?: string;
 }
 
 const DetailedAnalysisTabs = ({ 
@@ -24,10 +38,12 @@ const DetailedAnalysisTabs = ({
   sentimentData, 
   fundamentalData, 
   valuationData,
-  loading = false
+  loading = false,
+  ticker
 }: DetailedAnalysisTabsProps) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const navigation = useNavigation<NavigationProp>();
   
   // Animated value for scroll indicator
   const scrollX = React.useRef(new Animated.Value(0)).current;
@@ -226,6 +242,23 @@ const DetailedAnalysisTabs = ({
                 Momentum score: {technicalData.momentum_score}, 
                 1M: {technicalData.mom_1m}%, 3M: {technicalData.mom_3m}%
               </Text>
+              
+              {ticker && (
+                <TouchableOpacity 
+                  style={[styles.viewMoreButton, isDark && styles.darkViewMoreButton]}
+                  onPress={() => navigation.navigate('TechnicalAnalysis', { ticker })}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.viewMoreText, isDark && styles.darkViewMoreText]}>
+                    View Detailed Analysis
+                  </Text>
+                  <Ionicons 
+                    name="chevron-forward" 
+                    size={16} 
+                    color={isDark ? '#FFFFFF' : '#4B5563'} 
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             <Text style={[styles.placeholder, isDark && styles.darkMutedText]}>
@@ -530,6 +563,28 @@ const styles = StyleSheet.create({
   },
   darkScrollIndicator: {
     backgroundColor: '#4b5563',
+  },
+  viewMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  darkViewMoreButton: {
+    backgroundColor: '#374151',
+  },
+  viewMoreText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#4B5563',
+    marginRight: 4,
+  },
+  darkViewMoreText: {
+    color: '#FFFFFF',
   },
 });
 
