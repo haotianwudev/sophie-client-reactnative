@@ -5,7 +5,9 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  useColorScheme
+  useColorScheme,
+  ScrollView,
+  Animated
 } from 'react-native';
 import { base64ToImageSource } from '../../utils/imageHelpers';
 import CollapsibleCard from '../ui/CollapsibleCard';
@@ -323,9 +325,30 @@ const InvestmentMasterAnalysis = ({
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
+  // Animated value for scroll indicator
+  const scrollX = React.useRef(new Animated.Value(0)).current;
+  const [contentWidth, setContentWidth] = React.useState(0);
+  const [containerWidth, setContainerWidth] = React.useState(0);
+  const cardWidth = 118; // Card width (110) + margin (8)
+  
   const commentStyle = currentAgent 
     ? getCommentBubbleStyle(currentAgent.signal, isDark) 
     : getCommentBubbleStyle('neutral', isDark);
+
+  // Handle scroll end to update selected agent
+  const handleScrollEnd = (event: any) => {
+    if (!onSelectAgent) return;
+    
+    const offsetX = event.nativeEvent.contentOffset.x;
+    // Calculate which card is most visible
+    const cardIndex = Math.round(offsetX / cardWidth);
+    // Ensure index is within bounds
+    const safeIndex = Math.max(0, Math.min(cardIndex, availableAgents.length - 1));
+    // Select the agent if it's different from current
+    if (currentAgent?.agent !== availableAgents[safeIndex]) {
+      onSelectAgent(availableAgents[safeIndex]);
+    }
+  };
 
   if (loading) {
     return (
@@ -351,43 +374,103 @@ const InvestmentMasterAnalysis = ({
     );
   }
 
-  // Find available masters from agent IDs in NextJS
+  // Find available masters from agent IDs
   const availableAgents = ['warren_buffett', 'charlie_munger', 'cathie_wood', 'stanley_druckenmiller', 'ben_graham'];
   
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <View 
+      style={[styles.container, isDark && styles.darkContainer]}
+      onLayout={(event) => {
+        const { width } = event.nativeEvent.layout;
+        setContainerWidth(width);
+      }}
+    >
       {/* Agent Selector */}
       <View style={styles.agentSelectorContainer}>
         <Text style={[styles.sectionTitle, isDark && styles.darkText]}>Investment Masters</Text>
-        <View style={styles.agentButtons}>
+        
+        {/* Scroll indicator */}
+        <View style={styles.scrollIndicatorContainer}>
+          {containerWidth > 0 && contentWidth > 0 && (
+            <Animated.View 
+              style={[
+                styles.scrollIndicator, 
+                isDark && styles.darkScrollIndicator,
+                {
+                  width: `${(containerWidth / contentWidth) * 100}%`,
+                  transform: [
+                    {
+                      translateX: scrollX.interpolate({
+                        inputRange: [0, contentWidth - containerWidth],
+                        outputRange: [0, containerWidth - (containerWidth * containerWidth / contentWidth)],
+                        extrapolate: 'clamp'
+                      })
+                    }
+                  ]
+                }
+              ]} 
+            />
+          )}
+        </View>
+        
+        {/* Horizontally scrollable agent cards */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.agentScrollContainer}
+          decelerationRate="fast"
+          snapToInterval={cardWidth} // Width of card + margin
+          snapToAlignment="start"
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+          onContentSizeChange={(width) => {
+            setContentWidth(width);
+          }}
+          onMomentumScrollEnd={handleScrollEnd}
+        >
           {availableAgents.map((agent) => (
             <TouchableOpacity
               key={agent}
               style={[
-                styles.agentButton,
-                currentAgent.agent === agent && styles.selectedAgentButton,
-                isDark && styles.darkAgentButton,
-                currentAgent.agent === agent && isDark && styles.darkSelectedAgentButton
+                styles.agentCard,
+                currentAgent?.agent === agent && styles.selectedAgentCard,
+                isDark && styles.darkAgentCard,
+                currentAgent?.agent === agent && isDark && styles.darkSelectedAgentCard
               ]}
               onPress={() => onSelectAgent && onSelectAgent(agent)}
             >
               <Image
                 source={getAgentImageSource(agent)}
-                style={styles.agentButtonImage}
+                style={styles.agentCardImage}
               />
               <Text
                 style={[
-                  styles.agentButtonText,
-                  currentAgent.agent === agent && styles.selectedAgentButtonText,
-                  isDark && styles.darkAgentButtonText
+                  styles.agentCardText,
+                  currentAgent?.agent === agent && styles.selectedAgentCardText,
+                  isDark && styles.darkAgentCardText
                 ]}
                 numberOfLines={1}
+                ellipsizeMode="tail"
               >
                 {formatAgentName(agent)}
               </Text>
+              {/* Signal badge */}
+              <View 
+                style={[
+                  styles.agentCardSignalBadge, 
+                  { backgroundColor: getSignalColor(currentAgent?.agent === agent ? currentAgent.signal : 'neutral') }
+                ]}
+              >
+                <Text style={styles.agentCardSignalText}>
+                  {currentAgent?.agent === agent ? currentAgent.signal.toUpperCase() : 'NEUTRAL'}
+                </Text>
+              </View>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </View>
 
       {/* Agent Header */}
@@ -531,50 +614,77 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#000000',
   },
-  agentButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    gap: 8,
+  scrollIndicatorContainer: {
+    width: '100%',
+    height: 4,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 2,
+    marginBottom: 12,
+    overflow: 'hidden',
   },
-  agentButton: {
-    flexDirection: 'row',
+  scrollIndicator: {
+    width: '30%',
+    height: '100%',
+    backgroundColor: '#9ca3af',
+    borderRadius: 2,
+  },
+  darkScrollIndicator: {
+    backgroundColor: '#4b5563',
+  },
+  agentScrollContainer: {
+    paddingBottom: 8,
+    paddingTop: 4,
+  },
+  agentCard: {
     alignItems: 'center',
     backgroundColor: '#f9fafb',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    borderRadius: 12,
+    padding: 12,
+    width: 110,
+    marginRight: 8,
     borderWidth: 1,
     borderColor: '#e5e7eb',
   },
-  selectedAgentButton: {
+  selectedAgentCard: {
     backgroundColor: '#4f46e5',
     borderColor: '#4338ca',
   },
-  darkAgentButton: {
+  darkAgentCard: {
     backgroundColor: '#374151',
     borderColor: '#4b5563',
   },
-  darkSelectedAgentButton: {
+  darkSelectedAgentCard: {
     backgroundColor: '#4f46e5',
     borderColor: '#6366f1',
   },
-  agentButtonImage: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 8,
+  agentCardImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: 6,
   },
-  agentButtonText: {
-    fontSize: 13,
+  agentCardText: {
+    fontSize: 12,
     color: '#374151',
     fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  selectedAgentButtonText: {
+  selectedAgentCardText: {
     color: '#ffffff',
   },
-  darkAgentButtonText: {
+  darkAgentCardText: {
     color: '#d1d5db',
+  },
+  agentCardSignalBadge: {
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 4,
+  },
+  agentCardSignalText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: 'bold',
   },
   agentHeaderContainer: {
     marginBottom: 16,
