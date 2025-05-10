@@ -229,14 +229,20 @@ const DetailedAnalysisTabs = ({
               </Text>
               
               <Text style={[styles.subSectionTitle, { color: getSignalColor(technicalData.trend_signal) }]}>
-                Trend Analysis: {technicalData.trend_signal.toUpperCase()} 
+                Trend Analysis
+              </Text>
+              <Text style={[styles.contentText, {color: getSignalColor(technicalData.trend_signal), fontWeight: 'bold'}]}>
+                Signal: {technicalData.trend_signal.toUpperCase()}
               </Text>
               <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
                 Trend score: {technicalData.trend_score}, ADX: {technicalData.adx}
               </Text>
 
               <Text style={[styles.subSectionTitle, { color: getSignalColor(technicalData.momentum_signal) }]}>
-                Momentum: {technicalData.momentum_signal.toUpperCase()}
+                Momentum
+              </Text>
+              <Text style={[styles.contentText, {color: getSignalColor(technicalData.momentum_signal), fontWeight: 'bold'}]}>
+                Signal: {technicalData.momentum_signal.toUpperCase()}
               </Text>
               <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
                 Momentum score: {technicalData.momentum_score}, 

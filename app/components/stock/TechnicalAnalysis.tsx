@@ -215,14 +215,15 @@ const TechnicalAnalysis = ({
           </View>
           <Text style={[styles.cardTitle, isDark && styles.darkText]}>{title}</Text>
         </View>
-        <View style={styles.signalContainer}>
-          <Text style={[styles.signalText, {color: getSignalColor(signal)}]}>
-            {signal.toUpperCase()}
-          </Text>
-          <Text style={[styles.confidenceText, isDark && styles.darkMutedText]}>
-            ({confidence}% confidence)
-          </Text>
-        </View>
+      </View>
+      
+      <View style={styles.signalContainer}>
+        <Text style={[styles.signalText, {color: getSignalColor(signal)}]}>
+          {signal.toUpperCase()}
+        </Text>
+        <Text style={[styles.confidenceText, isDark && styles.darkMutedText]}>
+          ({confidence}% confidence)
+        </Text>
       </View>
       
       <Text style={[styles.tooltipText, isDark && styles.darkMutedText]}>
@@ -292,10 +293,10 @@ const TechnicalAnalysis = ({
             <View style={[styles.iconCircle, isDark && styles.darkIconCircle]}>
               {getStrategyIcon('trend')}
             </View>
+            <Text style={[styles.strategyName, isDark && styles.darkText]}>Trend Following</Text>
             <Text style={[styles.strategySignal, {color: getSignalColor(technicalData.trend_signal)}]}>
               {technicalData.trend_signal.toUpperCase()}
             </Text>
-            <Text style={[styles.strategyName, isDark && styles.darkText]}>Trend Following</Text>
           </View>
           
           {/* Mean Reversion */}
@@ -303,10 +304,10 @@ const TechnicalAnalysis = ({
             <View style={[styles.iconCircle, isDark && styles.darkIconCircle]}>
               {getStrategyIcon('mr')}
             </View>
+            <Text style={[styles.strategyName, isDark && styles.darkText]}>Mean Reversion</Text>
             <Text style={[styles.strategySignal, {color: getSignalColor(technicalData.mr_signal)}]}>
               {technicalData.mr_signal.toUpperCase()}
             </Text>
-            <Text style={[styles.strategyName, isDark && styles.darkText]}>Mean Reversion</Text>
           </View>
           
           {/* Momentum */}
@@ -314,10 +315,10 @@ const TechnicalAnalysis = ({
             <View style={[styles.iconCircle, isDark && styles.darkIconCircle]}>
               {getStrategyIcon('momentum')}
             </View>
+            <Text style={[styles.strategyName, isDark && styles.darkText]}>Momentum</Text>
             <Text style={[styles.strategySignal, {color: getSignalColor(technicalData.momentum_signal)}]}>
               {technicalData.momentum_signal.toUpperCase()}
             </Text>
-            <Text style={[styles.strategyName, isDark && styles.darkText]}>Momentum</Text>
           </View>
           
           {/* Volatility */}
@@ -325,10 +326,10 @@ const TechnicalAnalysis = ({
             <View style={[styles.iconCircle, isDark && styles.darkIconCircle]}>
               {getStrategyIcon('volatility')}
             </View>
+            <Text style={[styles.strategyName, isDark && styles.darkText]}>Volatility</Text>
             <Text style={[styles.strategySignal, {color: getSignalColor(technicalData.volatility_signal)}]}>
               {technicalData.volatility_signal.toUpperCase()}
             </Text>
-            <Text style={[styles.strategyName, isDark && styles.darkText]}>Volatility</Text>
           </View>
           
           {/* Statistical */}
@@ -336,10 +337,10 @@ const TechnicalAnalysis = ({
             <View style={[styles.iconCircle, isDark && styles.darkIconCircle]}>
               {getStrategyIcon('stat_arb')}
             </View>
+            <Text style={[styles.strategyName, isDark && styles.darkText]}>Statistical</Text>
             <Text style={[styles.strategySignal, {color: getSignalColor(technicalData.stat_arb_signal)}]}>
               {technicalData.stat_arb_signal.toUpperCase()}
             </Text>
-            <Text style={[styles.strategyName, isDark && styles.darkText]}>Statistical</Text>
           </View>
         </ScrollView>
       </View>
@@ -636,15 +637,15 @@ const styles = StyleSheet.create({
   darkIconCircle: {
     backgroundColor: '#4b5563',
   },
-  strategySignal: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
   strategyName: {
     fontSize: 12,
     color: '#111827',
     textAlign: 'center',
+    marginBottom: 4,
+  },
+  strategySignal: {
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   strategyCard: {
     marginBottom: 16,
@@ -661,7 +662,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -687,6 +688,8 @@ const styles = StyleSheet.create({
   signalContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
+    marginLeft: 50,
   },
   signalText: {
     fontSize: 14,
