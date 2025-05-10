@@ -4,11 +4,11 @@
     "slug": "sophie-client",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/agents/SOPHIE.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/agents/SOPHIE.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -22,7 +22,7 @@
     "android": {
       "privacyPolicy": "https://sophieai.dev/privacy-policy.html",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/agents/SOPHIE.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -67,7 +67,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "sophie-client"
+        "projectId": "a97e1b54-94d0-4ef6-b23b-d888d8273e49"
       }
     }
   }
