@@ -19,6 +19,7 @@ type RootStackParamList = {
   StockDetail: { ticker: string };
   AllStockReviews: undefined;
   TechnicalAnalysis: { ticker: string };
+  SentimentAnalysis: { ticker: string };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -371,6 +372,23 @@ const DetailedAnalysisTabs = ({
               <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
                 Bullish: {sentimentData.insider_bullish}, Bearish: {sentimentData.insider_bearish}
               </Text>
+              
+              {ticker && (
+                <TouchableOpacity 
+                  style={[styles.viewMoreButton, isDark && styles.darkViewMoreButton]}
+                  onPress={() => navigation.navigate('SentimentAnalysis', { ticker })}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.viewMoreText, isDark && styles.darkViewMoreText]}>
+                    View Detailed Analysis
+                  </Text>
+                  <Ionicons 
+                    name="chevron-forward" 
+                    size={16} 
+                    color={isDark ? '#FFFFFF' : '#4B5563'} 
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             <Text style={[styles.placeholder, isDark && styles.darkMutedText]}>
