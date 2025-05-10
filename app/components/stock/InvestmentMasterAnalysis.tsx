@@ -8,6 +8,7 @@ import {
   useColorScheme
 } from 'react-native';
 import { base64ToImageSource } from '../../utils/imageHelpers';
+import CollapsibleCard from '../ui/CollapsibleCard';
 
 // Base64 placeholder images (simple SVG circles with initials)
 const PLACEHOLDER_IMAGES: Record<string, string> = {
@@ -29,12 +30,210 @@ const AGENT_IMAGES: Record<string, any> = {
 };
 
 // Investment master philosophies
-const MASTER_PHILOSOPHIES: Record<string, string> = {
-  warren_buffett: "Warren Buffett focuses on business quality and competitive advantages. He looks for companies with strong earnings, high ROE, reasonable debt, and sustainable competitive moats.",
-  charlie_munger: "Charlie Munger emphasizes mental models and avoiding cognitive biases. He seeks businesses that are simple to understand, display rational capital allocation, and have ethical management.",
-  cathie_wood: "Cathie Wood targets disruptive innovation and exponential growth. She invests in companies driving technological breakthroughs in areas like AI, genomics, fintech, and autonomous tech.",
-  stanley_druckenmiller: "Stanley Druckenmiller employs a top-down macro approach with concentrated positions. He focuses on liquidity, momentum, and making asymmetric bets with strong conviction.",
-  ben_graham: "Benjamin Graham pioneered value investing and margin of safety concepts. He seeks companies trading below intrinsic value using quantitative metrics like low P/E ratios and strong balance sheets."
+const MASTER_PHILOSOPHIES: Record<string, {
+  summary: string;
+  categories: Array<{
+    title: string;
+    points: string[];
+  }>;
+}> = {
+  warren_buffett: {
+    summary: "Warren Buffett evolved from Graham-style value investing to focus on business quality. His approach combines quantitative valuation with qualitative assessment of competitive advantages.",
+    categories: [
+      {
+        title: "Fundamental Analysis",
+        points: [
+          "Profitability: ROE >15%, strong margins",
+          "Financial Health: Low debt, good liquidity", 
+          "Consistency: Stable earnings patterns"
+        ]
+      },
+      {
+        title: "Economic Moat",
+        points: [
+          "Stable ROE >15% across periods",
+          "Strong operating margins >15%",
+          "Pricing power and market dominance"
+        ]
+      },
+      {
+        title: "Management Quality",
+        points: [
+          "Shareholder-friendly decisions",
+          "Effective capital allocation",
+          "Transparency and integrity"
+        ]
+      },
+      {
+        title: "Valuation Approach",
+        points: [
+          "\"Owner earnings\" focus",
+          "Margin of safety principle",
+          "Long-term business perspective"
+        ]
+      }
+    ]
+  },
+  charlie_munger: {
+    summary: "Charlie Munger is known for his multidisciplinary approach and mental models. He emphasizes investing in high-quality businesses with durable competitive advantages at reasonable prices.",
+    categories: [
+      {
+        title: "Moat Strength",
+        points: [
+          "ROIC Consistency: High returns (>15%)",
+          "Pricing Power: Strong gross margins",
+          "Capital Efficiency: Low requirements"
+        ]
+      },
+      {
+        title: "Management Quality",
+        points: [
+          "Capital Allocation excellence",
+          "Insider Activity: \"Skin in the game\"",
+          "Decreasing share count preferred"
+        ]
+      },
+      {
+        title: "Business Predictability",
+        points: [
+          "Consistent revenue growth",
+          "Positive operating income trends",
+          "Low margin volatility over time"
+        ]
+      },
+      {
+        title: "Mental Models Applied",
+        points: [
+          "Inversion (avoiding mistakes)",
+          "Microeconomics (supply/demand)",
+          "Psychology (market sentiment)"
+        ]
+      }
+    ]
+  },
+  cathie_wood: {
+    summary: "Cathie Wood is known for her focus on disruptive innovation and exponential growth potential. She pioneered thematic investing in areas like genomics, AI, fintech, and blockchain, embracing volatility for long-term gains.",
+    categories: [
+      {
+        title: "Disruptive Potential",
+        points: [
+          "Revenue Growth Acceleration",
+          "Gross Margin Expansion",
+          "Operating Leverage",
+          "R&D Intensity"
+        ]
+      },
+      {
+        title: "Innovation Growth",
+        points: [
+          "R&D Growth Rate",
+          "Free Cash Flow",
+          "Operating Efficiency",
+          "Capital Allocation"
+        ]
+      },
+      {
+        title: "Exponential Valuation",
+        points: [
+          "High-Growth DCF",
+          "TAM Analysis",
+          "Margin of Safety",
+          "Scoring Summary"
+        ]
+      },
+      {
+        title: "Key Metrics",
+        points: [
+          "Exponential Growth Potential",
+          "Innovation Intensity",
+          "Disruptive Valuation",
+          "Signal Generation"
+        ]
+      }
+    ]
+  },
+  stanley_druckenmiller: {
+    summary: "Stanley Druckenmiller is known for his aggressive but disciplined approach, focusing on asymmetric risk-reward opportunities and capital preservation. He achieved 30%+ annual returns over 30 years by riding strong trends and managing risk effectively.",
+    categories: [
+      {
+        title: "Growth & Momentum",
+        points: [
+          "Revenue Growth >30%",
+          "EPS Growth >30%",
+          "Price Momentum >50%",
+          "Trend Strength"
+        ]
+      },
+      {
+        title: "Risk-Reward Analysis",
+        points: [
+          "Debt-to-Equity <0.3",
+          "Price Volatility",
+          "Upside/Downside Ratio",
+          "Capital Preservation"
+        ]
+      },
+      {
+        title: "Valuation Metrics",
+        points: [
+          "P/E Ratio <15",
+          "P/FCF Ratio <15",
+          "EV/EBIT <15",
+          "EV/EBITDA <10"
+        ]
+      },
+      {
+        title: "Market Signals",
+        points: [
+          "News Sentiment",
+          "Insider Activity",
+          "Institutional Interest",
+          "Market Psychology"
+        ]
+      }
+    ]
+  },
+  ben_graham: {
+    summary: "Benjamin Graham, the father of value investing, pioneered quantitative security analysis and emphasized buying stocks trading below their intrinsic value with a margin of safety. His approach focuses strictly on valuation metrics rather than qualitative factors.",
+    categories: [
+      {
+        title: "Earnings Stability",
+        points: [
+          "Positive EPS Years",
+          "EPS Growth Rate",
+          "Earnings Consistency",
+          "Profit Stability"
+        ]
+      },
+      {
+        title: "Financial Strength",
+        points: [
+          "Current Ratio >2.0",
+          "Debt Ratio <0.5",
+          "Dividend Record",
+          "Working Capital"
+        ]
+      },
+      {
+        title: "Valuation Metrics",
+        points: [
+          "Net-Net Working Capital",
+          "Graham Number",
+          "Margin of Safety",
+          "Intrinsic Value"
+        ]
+      },
+      {
+        title: "Key Principles",
+        points: [
+          "Quantitative Analysis",
+          "Intrinsic Value Focus",
+          "Margin of Safety",
+          "Diversification"
+        ]
+      }
+    ]
+  }
 };
 
 export interface AgentSignal {
@@ -250,17 +449,46 @@ const InvestmentMasterAnalysis = ({
           {currentAgent.reasoning}
         </Text>
       </View>
-
-      {/* Philosophy */}
-      <View style={[styles.philosophyContainer, isDark && styles.darkPhilosophyContainer]}>
-        <Text style={[styles.philosophyTitle, isDark && styles.darkText]}>
-          {formatAgentName(currentAgent.agent)}'s Investment Philosophy
-        </Text>
-        <Text style={[styles.philosophyText, isDark && styles.darkMutedText]}>
-          {MASTER_PHILOSOPHIES[currentAgent.agent] || 
-            "This master investor follows a disciplined investment approach focused on finding value and growth opportunities."}
-        </Text>
-      </View>
+      
+      {/* Investment Philosophy - Collapsible */}
+      <CollapsibleCard 
+        title={`Tap to review ${formatAgentName(currentAgent.agent)}'s investment philosophy`}
+        initiallyExpanded={false}
+        isDark={isDark}
+        containerStyle={styles.philosophyContainer}
+        titleStyle={{
+          ...styles.philosophyTitle,
+          color: isDark ? '#9ca3af' : '#666666'
+        }}
+      >
+        <View style={styles.philosophyContentContainer}>
+          <Text style={[styles.philosophySummary, isDark && styles.darkText]}>
+            {MASTER_PHILOSOPHIES[currentAgent.agent]?.summary || 
+              "This investment master's philosophy is not available."}
+          </Text>
+          
+          {/* Categories Grid */}
+          {MASTER_PHILOSOPHIES[currentAgent.agent]?.categories && (
+            <View style={styles.categoriesGrid}>
+              {MASTER_PHILOSOPHIES[currentAgent.agent]?.categories.map((category, index) => (
+                <View key={index} style={styles.categoryContainer}>
+                  <Text style={[styles.categoryTitle, isDark && styles.darkCategoryTitle]}>
+                    {category.title}
+                  </Text>
+                  <View style={styles.bulletList}>
+                    {category.points.map((point, pointIndex) => (
+                      <View key={pointIndex} style={styles.bulletPoint}>
+                        <Text style={[styles.bulletDot, isDark && styles.darkText]}>•</Text>
+                        <Text style={[styles.bulletText, isDark && styles.darkMutedText]}>{point}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      </CollapsibleCard>
     </View>
   );
 };
@@ -422,29 +650,66 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   philosophyContainer: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    padding: 16,
-  },
-  darkPhilosophyContainer: {
-    backgroundColor: '#374151',
+    marginTop: 16,
   },
   philosophyTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: '400',
+    fontStyle: 'italic',
   },
-  philosophyText: {
+  philosophyContentContainer: {
+    padding: 8,
+  },
+  philosophySummary: {
     fontSize: 14,
     lineHeight: 20,
-    color: '#4b5563',
+    color: '#333333',
+    marginBottom: 16,
+  },
+  categoriesGrid: {
+    marginTop: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  categoryContainer: {
+    marginBottom: 16,
+    width: '48%',
+  },
+  categoryTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 6,
+  },
+  bulletList: {
+    marginLeft: 4,
+  },
+  bulletPoint: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  bulletDot: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginRight: 4,
+    marginTop: 1,
+  },
+  bulletText: {
+    fontSize: 11,
+    lineHeight: 14,
+    color: '#6b7280',
+    flex: 1,
   },
   darkText: {
     color: '#FFFFFF',
   },
   darkMutedText: {
     color: '#9ca3af',
+  },
+  darkCategoryTitle: {
+    color: '#e5e7eb',
   },
 });
 
