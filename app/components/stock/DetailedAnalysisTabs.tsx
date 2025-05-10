@@ -11,7 +11,7 @@ import {
 import AnalysisRadarChart from './AnalysisRadarChart';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 
 // Define navigation type
 type RootStackParamList = {
@@ -224,30 +224,79 @@ const DetailedAnalysisTabs = ({
               <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
                 Confidence: {technicalData.confidence}%
               </Text>
-              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                Date: {technicalData.biz_date}
-              </Text>
               
-              <Text style={[styles.subSectionTitle, { color: getSignalColor(technicalData.trend_signal) }]}>
-                Trend Analysis
-              </Text>
-              <Text style={[styles.contentText, {color: getSignalColor(technicalData.trend_signal), fontWeight: 'bold'}]}>
-                Signal: {technicalData.trend_signal.toUpperCase()}
-              </Text>
-              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                Trend score: {technicalData.trend_score}, ADX: {technicalData.adx}
-              </Text>
-
-              <Text style={[styles.subSectionTitle, { color: getSignalColor(technicalData.momentum_signal) }]}>
-                Momentum
-              </Text>
-              <Text style={[styles.contentText, {color: getSignalColor(technicalData.momentum_signal), fontWeight: 'bold'}]}>
-                Signal: {technicalData.momentum_signal.toUpperCase()}
-              </Text>
-              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                Momentum score: {technicalData.momentum_score}, 
-                1M: {technicalData.mom_1m}%, 3M: {technicalData.mom_3m}%
-              </Text>
+              {/* Simplified horizontal subsection summaries */}
+              <View style={styles.subsectionsContainer}>
+                {/* Trend */}
+                <View style={[
+                  styles.subsectionSimple, 
+                  isDark && styles.darkSubsectionSimple,
+                  {borderLeftColor: getSignalColor(technicalData.trend_signal)}
+                ]}>
+                  <View style={styles.subsectionHeader}>
+                    <Feather name="trending-up" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                    <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                      Trend: <Text style={{color: getSignalColor(technicalData.trend_signal)}}>{technicalData.trend_signal.toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Momentum */}
+                <View style={[
+                  styles.subsectionSimple, 
+                  isDark && styles.darkSubsectionSimple,
+                  {borderLeftColor: getSignalColor(technicalData.momentum_signal)}
+                ]}>
+                  <View style={styles.subsectionHeader}>
+                    <MaterialCommunityIcons name="lightning-bolt" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                    <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                      Momentum: <Text style={{color: getSignalColor(technicalData.momentum_signal)}}>{technicalData.momentum_signal.toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Mean Reversion */}
+                <View style={[
+                  styles.subsectionSimple, 
+                  isDark && styles.darkSubsectionSimple,
+                  {borderLeftColor: getSignalColor(technicalData.mr_signal)}
+                ]}>
+                  <View style={styles.subsectionHeader}>
+                    <MaterialCommunityIcons name="repeat" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                    <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                      Mean Rev: <Text style={{color: getSignalColor(technicalData.mr_signal)}}>{technicalData.mr_signal.toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Volatility */}
+                <View style={[
+                  styles.subsectionSimple, 
+                  isDark && styles.darkSubsectionSimple,
+                  {borderLeftColor: getSignalColor(technicalData.volatility_signal)}
+                ]}>
+                  <View style={styles.subsectionHeader}>
+                    <MaterialCommunityIcons name="chart-bar" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                    <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                      Volatility: <Text style={{color: getSignalColor(technicalData.volatility_signal)}}>{technicalData.volatility_signal.toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+                
+                {/* Statistical */}
+                <View style={[
+                  styles.subsectionSimple, 
+                  isDark && styles.darkSubsectionSimple,
+                  {borderLeftColor: getSignalColor(technicalData.stat_arb_signal)}
+                ]}>
+                  <View style={styles.subsectionHeader}>
+                    <FontAwesome name="arrows-v" size={14} color={isDark ? "#e5e7eb" : "#111827"} />
+                    <Text style={[styles.subsectionTitle, isDark && styles.darkText]}>
+                      Statistical: <Text style={{color: getSignalColor(technicalData.stat_arb_signal)}}>{technicalData.stat_arb_signal.toUpperCase()}</Text>
+                    </Text>
+                  </View>
+                </View>
+              </View>
               
               {ticker && (
                 <TouchableOpacity 
@@ -301,9 +350,6 @@ const DetailedAnalysisTabs = ({
             <View style={styles.cardContent}>
               <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
                 Confidence: {sentimentData.confidence}%
-              </Text>
-              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                Date: {sentimentData.biz_date}
               </Text>
               
               <Text style={[styles.subSectionTitle, isDark && styles.darkText]}>
@@ -362,9 +408,6 @@ const DetailedAnalysisTabs = ({
               <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
                 Confidence: {fundamentalData.confidence}%
               </Text>
-              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                Date: {fundamentalData.biz_date}
-              </Text>
               
               <Text style={[styles.subSectionTitle, isDark && styles.darkText]}>
                 Growth Metrics
@@ -416,10 +459,6 @@ const DetailedAnalysisTabs = ({
 
           {valuationData && Array.isArray(valuationData) && valuationData.length > 0 ? (
             <View style={styles.cardContent}>
-              <Text style={[styles.contentText, isDark && styles.darkMutedText]}>
-                Date: {valuationData[0].biz_date}
-              </Text>
-              
               {valuationData.map((val, index) => (
                 <View key={index} style={styles.valuationItem}>
                   <Text style={[styles.subSectionTitle, isDark && styles.darkText]}>
@@ -591,6 +630,32 @@ const styles = StyleSheet.create({
   },
   darkViewMoreText: {
     color: '#FFFFFF',
+  },
+  subsectionsContainer: {
+    marginVertical: 10,
+  },
+  subsectionSimple: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingLeft: 10,
+    marginBottom: 6,
+    borderLeftWidth: 3,
+    borderRadius: 4,
+    backgroundColor: '#f9fafb',
+  },
+  darkSubsectionSimple: {
+    backgroundColor: '#333333',
+  },
+  subsectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subsectionTitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#111827',
+    marginLeft: 6,
   },
 });
 
