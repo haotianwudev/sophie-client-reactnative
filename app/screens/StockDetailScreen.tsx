@@ -356,24 +356,6 @@ const StockDetailScreen = () => {
               onToggleBookmark={handleToggleBookmark}
             />
             
-            <StockAnalysisSummary
-              sophieData={{
-                signal: sophieData?.latestSophieAnalysis?.signal || 'neutral',
-                confidence: sophieData?.latestSophieAnalysis?.confidence || 0,
-                overall_score: sophieData?.latestSophieAnalysis?.overall_score || 0,
-                reasoning: sophieData?.latestSophieAnalysis?.reasoning || '',
-                short_term_outlook: sophieData?.latestSophieAnalysis?.short_term_outlook || '',
-                medium_term_outlook: sophieData?.latestSophieAnalysis?.medium_term_outlook || '',
-                long_term_outlook: sophieData?.latestSophieAnalysis?.long_term_outlook || '',
-                bullish_factors: sophieData?.latestSophieAnalysis?.bullish_factors || [],
-                bearish_factors: sophieData?.latestSophieAnalysis?.bearish_factors || [],
-                risks: sophieData?.latestSophieAnalysis?.risks || [],
-                model_name: sophieData?.latestSophieAnalysis?.model_name || '',
-                model_display_name: sophieData?.latestSophieAnalysis?.model_display_name || ''
-              }}
-              loading={sophieLoading}
-            />
-            
             {/* Tabs */}
             <View style={styles.tabsContainer}>
               <TouchableOpacity
@@ -595,4 +577,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StockDetailScreen; 
+export default StockDetailScreen;
